@@ -1,0 +1,58 @@
+import os
+import zoneinfo
+from functools import lru_cache
+
+from dotenv import load_dotenv
+from pydantic import BaseSettings
+
+load_dotenv()
+
+
+class GlobalSettings(BaseSettings):
+    is_debug: bool = False
+    timezone: str = "Europe/Moscow"
+    language: str = "ru-RU"
+
+
+@lru_cache()
+def get_global_settings():
+    return GlobalSettings()
+
+
+@lru_cache()
+def get_timezone():
+    return zoneinfo.ZoneInfo(key=get_global_settings().timezone)
+
+
+class YClientsSettings(BaseSettings):
+    yclients_api_partner_token: str = None
+    yclients_login: str = None
+    yclients_password: str = None
+    yclients_company_name: str = None
+    yclients_storage_name: str = None
+
+
+@lru_cache()
+def get_yclients_settings():
+    return YClientsSettings()
+
+
+class MoyscladSettings(BaseSettings):
+    moysclad_login: str = None
+    moysclad_password: str = None
+
+
+@lru_cache()
+def get_moysclad_settings():
+    return MoyscladSettings()
+
+
+class SqliteSettings(BaseSettings):
+    database_filename: str = "bridge.session"
+
+
+@lru_cache()
+def get_database_settings():
+    settings = SqliteSettings()
+    settings.database_filename = "/".join([os.path.abspath(os.getcwd()), settings.database_filename])
+    return settings
