@@ -13,7 +13,7 @@ class MoyscladApiWebhookActionType(enum.Enum):
     DELETE = "DELETE"
 
 
-class MoyscladApi(Api):
+class MoysckladApi(Api):
     URL_ENTITY: str = "https://online.moysklad.ru/api/remap/1.2/entity/{method}/"
     URL_SECURITY: str = "https://online.moysklad.ru/api/remap/1.2/security/{method}/"
 
@@ -46,7 +46,7 @@ class MoyscladApi(Api):
         :return:
         """
         if not self.access_token:
-            url = MoyscladApi.URL_SECURITY.format(method="token")
+            url = MoysckladApi.URL_SECURITY.format(method="token")
             settings = get_moysclad_settings()
             login_header = self.header
 
@@ -66,7 +66,7 @@ class MoyscladApi(Api):
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-towar-poluchit-spisok-towarow
         :return:
         """
-        url = MoyscladApi.URL_ENTITY.format(method="product")
+        url = MoysckladApi.URL_ENTITY.format(method="product")
         req = await self.get(url)
         return req.response
 
@@ -75,7 +75,7 @@ class MoyscladApi(Api):
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-towar-massowoe-sozdanie-i-obnowlenie-towarow
         :return:
         """
-        url = MoyscladApi.URL_ENTITY.format(method="product")
+        url = MoysckladApi.URL_ENTITY.format(method="product")
         req = await self.post(url, products_list)
         return req.response
 
@@ -101,7 +101,7 @@ class MoyscladApi(Api):
 
         :return:
         """
-        url = MoyscladApi.URL_ENTITY.format(method="enter")
+        url = MoysckladApi.URL_ENTITY.format(method="enter")
         req = await self.post(url, {
             "name": name,
             "organization": organization_meta,
@@ -115,7 +115,7 @@ class MoyscladApi(Api):
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-veb-huki-poluchit-spisok-web-hukow
         :return:
         """
-        url = MoyscladApi.URL_ENTITY.format(method="webhook")
+        url = MoysckladApi.URL_ENTITY.format(method="webhook")
         req = await self.get(url)
         return req.response
 
@@ -124,7 +124,7 @@ class MoyscladApi(Api):
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-veb-huki-sozdat-web-huk
         :return:
         """
-        req_url = MoyscladApi.URL_ENTITY.format(method="webhook")
+        req_url = MoysckladApi.URL_ENTITY.format(method="webhook")
         params = {
             "url": url,
             "action": action.value,

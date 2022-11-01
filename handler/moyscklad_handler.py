@@ -4,17 +4,17 @@ import logging
 from pony.orm import db_session
 
 from database.database import MoyscladData
-from request.moysclad_api import MoyscladApi
+from request.moyscklad_api import MoysckladApi
 from settings import get_timezone
 
 _logger = logging.getLogger(__name__)
 
 
-class MoyscladHandler:
-    api: MoyscladApi = None
+class MoysckladHandler:
+    api: MoysckladApi = None
 
     def __init__(self):
-        self.api = MoyscladApi()
+        self.api = MoysckladApi()
 
     async def connect(self):
         _logger.debug("Try connect to Moysclad ...")

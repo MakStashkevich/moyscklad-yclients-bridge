@@ -3,7 +3,7 @@ import logging
 import sys
 
 from database.database import bind_database
-from handler.moysclad_handler import MoyscladHandler
+from handler.moyscklad_handler import MoysckladHandler
 from handler.yclients_handler import YClientsHandler
 from request.api import ApiException
 from settings import get_global_settings
@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 
 class Bridge:
     yclients_handler: YClientsHandler
-    moysclad_handler: MoyscladHandler
+    moysclad_handler: MoysckladHandler
 
     def __init__(self):
         asyncio.run(self.process())
@@ -26,7 +26,7 @@ class Bridge:
         await bind_database()
 
         self.yclients_handler = YClientsHandler()
-        self.moysclad_handler = MoyscladHandler()
+        self.moysclad_handler = MoysckladHandler()
 
         try:
             await self.yclients_handler.connect()
