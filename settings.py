@@ -1,6 +1,7 @@
 import os
 import zoneinfo
 from functools import lru_cache
+from secrets import token_hex
 
 from dotenv import load_dotenv
 from pydantic import BaseSettings
@@ -56,3 +57,14 @@ def get_database_settings():
     settings = SqliteSettings()
     settings.database_filename = "/".join([os.path.abspath(os.getcwd()), settings.database_filename])
     return settings
+
+
+class WebserverSettings(BaseSettings):
+    webserver_session_secret: str = token_hex()
+    webserver_host: str = "localhost"
+    webserver_port: int = 3000
+
+
+@lru_cache()
+def get_webserver_settings():
+    return WebserverSettings()

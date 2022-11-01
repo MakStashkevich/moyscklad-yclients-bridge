@@ -10,6 +10,7 @@ RUN pip install --no-cache-dir --upgrade -r /bridge/requirements.txt
 
 COPY . /bridge/
 
-EXPOSE 7080
+#EXPOSE 8080
+EXPOSE 3000
 
 ENTRYPOINT ["python", "-m", "bridge"]
