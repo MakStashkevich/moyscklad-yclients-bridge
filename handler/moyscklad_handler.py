@@ -27,7 +27,6 @@ class MoysckladHandler:
         webhook_rows = current_webhooks['rows']
 
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-nastrojki-pol-zowatelq
-        # Нижний раздел «Стартовые экраны»
         webhook_entity_type = "customerorder"
         webhook_connected = False
         webhooks_meta = []
@@ -38,16 +37,20 @@ class MoysckladHandler:
                     webhook_data['url'] == webserver_hook_url and \
                     webhook_data['method'] == "POST" and \
                     webhook_data['enabled'] is True:
+                _logger.debug("Found connected webhook ...")
                 webhook_connected = True
                 break
 
         if not webhook_connected:
+            _logger.debug("Webhook not found ...")
             if len(webhooks_meta) > 0:
+                _logger.debug("Delete all connected webhooks ...")
                 res = await self.api.delete_webhooks(webhooks_meta)
                 if type(res) is list:
                     for r in res:
                         _logger.debug(r['info'])
 
+            _logger.debug("Set new webhook ...")
             await self.api.set_webhook(
                 url=webserver_hook_url,
                 entity_type=webhook_entity_type,
@@ -79,4 +82,4 @@ class MoysckladHandler:
             MoyscladData(access_token=self.api.access_token)
 
     async def handle_webhook(self, response: dict):
-        _logger.debug("have moysclad handle webhook")
+        _logger.debug("Start handle webhook ...")

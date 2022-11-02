@@ -27,6 +27,8 @@ class YClientsHandler:
 
         current_webhooks = await self.api.get_hook_settings(self.company_id)
         if webserver_hook_url not in current_webhooks['urls']:
+            _logger.debug("Webhook not found ...")
+            _logger.debug("Set new webhook ...")
             await self.api.set_hook_settings(
                 company_id=self.company_id,
                 urls=[webserver_hook_url],
@@ -99,4 +101,4 @@ class YClientsHandler:
         _logger.debug(f"Storage id:{self.storage_id} found!")
 
     async def handle_webhook(self, response: dict):
-        _logger.debug("have yclients handle webhook")
+        _logger.debug("Start handle webhook ...")
