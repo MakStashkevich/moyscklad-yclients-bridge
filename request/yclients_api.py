@@ -62,8 +62,10 @@ class YClientsApi(Api):
         https://developers.yclients.com/ru/#tag/Kompanii/operation/Получить%20список%20компаний
         :return:
         """
-        url = YClientsApi.URL.format(method="companies") + '?my=1'
-        req = await self.get(url)
+        url = YClientsApi.URL.format(method="companies")
+        req = await self.get(url, {
+            "my": 1
+        })
 
         response = req.response
         self.raise_failure_response(response)
@@ -86,8 +88,11 @@ class YClientsApi(Api):
         https://developers.yclients.com/ru/#tag/Tovary/operation/Получить%20товары
         :return:
         """
-        url = YClientsApi.URL.format(method="goods") + str(company_id) + "?count=1000&page=1"
-        req = await self.get(url)
+        url = YClientsApi.URL.format(method="goods") + str(company_id)
+        req = await self.get(url, {
+            "count": 1000,
+            "page": 1
+        })
 
         response = req.response
         self.raise_failure_response(response)
@@ -128,6 +133,14 @@ class YClientsApi(Api):
         if comment is not None:
             params["comment"] = comment
         req = await self.post(url, params)
+
+        response = req.response
+        self.raise_failure_response(response)
+        return response['data']
+
+    async def get_hook_settings(self, company_id: int) -> dict:
+        url = YClientsApi.URL.format(method='hooks_settings') + str(company_id)
+        req = await self.get(url)
 
         response = req.response
         self.raise_failure_response(response)

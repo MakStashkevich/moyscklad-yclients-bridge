@@ -4,8 +4,8 @@ import logging
 from pony.orm import db_session
 
 from database.database import MoyscladData
-from request.moyscklad_api import MoysckladApi
-from settings import get_timezone
+from request.moyscklad_api import MoysckladApi, MoyscladApiWebhookActionType
+from settings import get_timezone, get_webserver_settings
 
 _logger = logging.getLogger(__name__)
 
@@ -19,7 +19,36 @@ class MoysckladHandler:
     async def connect(self):
         _logger.debug("Try connect to Moysclad ...")
         await self.prepare()
-        # await self.api.set_webhook(url="", action=MoyscladApiWebhookActionType.CREATE)
+
+        webserver_settings = get_webserver_settings()
+        webserver_hook_url = f"http://{webserver_settings.webserver_host}:{webserver_settings.webserver_port}/moyscklad/"
+
+        current_webhooks = await self.api.get_webhooks()
+        webhook_rows = current_webhooks['rows']
+        webhook_entity_type = "demand"
+        webhook_connected = False
+        webhooks_meta = []
+
+        _logger.debug(webhook_rows)
+
+        for webhook_data in webhook_rows:
+            webhooks_meta.append({"meta": webhook_data['meta']})
+            if webhook_data['entityType'] == webhook_entity_type and \
+                    webhook_data['url'] == webserver_hook_url and \
+                    webhook_data['method'] == "POST" and \
+                    webhook_data['enabled'] is True:
+                webhook_connected = True
+                break
+
+        if not webhook_connected:
+            if len(webhooks_meta) > 0:
+                await self.api.delete_webhooks(webhooks_meta)
+            await self.api.set_webhook(
+                url=webserver_hook_url,
+                entity_type=webhook_entity_type,
+                action=MoyscladApiWebhookActionType.CREATE
+            )
+
         _logger.info("Successful connected to Moysclad!")
 
     async def prepare(self):

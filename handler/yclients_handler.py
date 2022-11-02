@@ -5,7 +5,7 @@ from pony.orm import db_session
 
 from database.database import YClientsData
 from request.yclients_api import YClientsApi
-from settings import get_yclients_settings, get_timezone
+from settings import get_yclients_settings, get_timezone, get_webserver_settings
 
 _logger = logging.getLogger(__name__)
 
@@ -21,7 +21,24 @@ class YClientsHandler:
     async def connect(self):
         _logger.debug("Try connect to YClients ...")
         await self.prepare()
-        # await self.api.set_hook_settings(self.company_id, urls=["test"], active=True, goods_operations_sale=True)
+
+        webserver_settings = get_webserver_settings()
+        webserver_hook_url = f"http://{webserver_settings.webserver_host}:{webserver_settings.webserver_port}/yclients/"
+
+        current_webhooks = await self.api.get_hook_settings(self.company_id)
+        if webserver_hook_url not in current_webhooks['urls']:
+            await self.api.set_hook_settings(
+                company_id=self.company_id,
+                urls=[webserver_hook_url],
+                active=True,  # уведомления активны
+                good=True,  # товар
+                goods_operations_sale=True,  # продажа товара
+                goods_operations_receipt=True,  # приход товара
+                goods_operations_consumable=True,  # списание расходника
+                goods_operations_stolen=True,  # списание товара
+                self_sending=True,  # создатель webhook получает события, которые инициированы им
+            )
+
         _logger.info("Successful connected to YClients!")
 
     async def prepare(self):

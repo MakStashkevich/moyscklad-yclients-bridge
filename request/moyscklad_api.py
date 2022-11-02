@@ -119,7 +119,18 @@ class MoysckladApi(Api):
         req = await self.get(url)
         return req.response
 
-    async def set_webhook(self, url: str, action: MoyscladApiWebhookActionType, entity_type: str = "bridge") -> dict:
+    async def delete_webhooks(self, webhooks_meta: list) -> dict:
+        """
+        https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-veb-huki-poluchit-spisok-web-hukow
+        :return:
+        """
+        url = MoysckladApi.URL_ENTITY.format(method="webhook/delete")
+        req = await self.post(url, webhooks_meta)
+        return req.response
+
+    async def set_webhook(self, url: str,
+                          entity_type: str = "demand",
+                          action: MoyscladApiWebhookActionType = MoyscladApiWebhookActionType.CREATE) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-veb-huki-sozdat-web-huk
         :return:
