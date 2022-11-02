@@ -45,4 +45,4 @@ class MoysckladHandler:
             MoyscladData(access_token=self.api.access_token)
 
     async def handle_webhook(self, response: dict):
-        pass
+        _logger.debug("have moysclad handle webhook")

@@ -4,8 +4,7 @@ import sys
 
 import webhook.webserver
 from database.database import bind_database
-from handler.moyscklad_handler import MoysckladHandler
-from handler.yclients_handler import YClientsHandler
+from handler import yclients_handler, moyscklad_handler
 from request.api import ApiException
 from settings import get_global_settings
 
@@ -16,36 +15,26 @@ logging.basicConfig(
 _logger = logging.getLogger(__name__)
 
 
-class Bridge:
-    yclients_handler: YClientsHandler
-    moysclad_handler: MoysckladHandler
+async def bridge_process():
+    await bind_database()
 
-    def __init__(self):
-        asyncio.run(self.process())
+    try:
+        await yclients_handler.connect()
+        await moyscklad_handler.connect()
+        await webhook.webserver.connect()
 
-    async def process(self):
-        await bind_database()
-
-        self.yclients_handler = YClientsHandler()
-        self.moysclad_handler = MoysckladHandler()
-
-        try:
-            await self.yclients_handler.connect()
-            await self.moysclad_handler.connect()
-            await webhook.webserver.connect()
-
-            # wait forever
-            await asyncio.Event().wait()
-        except (ApiException, Exception) as ex:
-            message = ex.message if isinstance(ex, ApiException) else str(ex)
-            _logger.error(f"Not connected: {message}")
-            if get_global_settings().is_debug:
-                _logger.exception(ex)
-            sys.exit(1)
+        # wait forever
+        await asyncio.Event().wait()
+    except (ApiException, Exception) as ex:
+        message = ex.message if isinstance(ex, ApiException) else str(ex)
+        _logger.error(f"Not connected: {message}")
+        if get_global_settings().is_debug:
+            _logger.exception(ex)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
     try:
-        Bridge()
+        asyncio.run(bridge_process())
     except KeyboardInterrupt:
         pass

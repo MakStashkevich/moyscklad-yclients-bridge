@@ -82,4 +82,4 @@ class YClientsHandler:
         _logger.debug(f"Storage id:{self.storage_id} found!")
 
     async def handle_webhook(self, response: dict):
-        pass
+        _logger.debug("have yclients handle webhook")
