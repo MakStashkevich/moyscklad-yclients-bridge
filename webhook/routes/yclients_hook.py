@@ -9,7 +9,6 @@ routes = web.RouteTableDef()
 
 @routes.get('/yclients/')
 async def handle_yclients_hook(req):
-    _logger.info("loaded yclients")
     return web.json_response({
         'ok': True
     })

@@ -33,7 +33,9 @@ class Bridge:
             await self.yclients_handler.connect()
             await self.moysclad_handler.connect()
             await webhook.webserver.connect()
-            await asyncio.shield(asyncio.get_event_loop().create_future())
+
+            # wait forever
+            await asyncio.Event().wait()
         except (ApiException, Exception) as ex:
             message = ex.message if isinstance(ex, ApiException) else str(ex)
             _logger.error(f"Not connected: {message}")

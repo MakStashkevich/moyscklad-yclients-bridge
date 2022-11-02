@@ -11,7 +11,7 @@ echo "Build bridge image ..."
 sudo docker build -t bridge .
 echo
 echo "Read .env file"
-if [ ! -f .env ]
+if [ -f .env ]
 then
     set -a; source .env; set +a
 fi

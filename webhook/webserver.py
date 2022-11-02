@@ -2,6 +2,7 @@ import logging
 from hashlib import sha256
 
 from aiohttp import web
+from aiohttp.web_middlewares import normalize_path_middleware
 from aiohttp_session import setup
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 
@@ -12,7 +13,9 @@ _logger = logging.getLogger(__name__)
 
 
 def get_web_app():
-    app = web.Application()
+    app = web.Application(middlewares=[
+        normalize_path_middleware(append_slash=True, merge_slashes=True),
+    ])
     setup_web_session(app)
     app.add_routes(routes)
     return app
@@ -33,7 +36,7 @@ async def connect():
     runner = web.AppRunner(app)
     await runner.setup()
 
-    site = web.TCPSite(runner, host="127.0.0.1", port=port)
+    site = web.TCPSite(runner, host="0.0.0.0", port=port)
     await site.start()
 
     _logger.info(f'Webhook server loaded on http://{host}:{port}')
