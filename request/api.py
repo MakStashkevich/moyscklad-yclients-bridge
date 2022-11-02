@@ -1,5 +1,6 @@
 import asyncio
 import logging
+from time import time
 
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
@@ -7,6 +8,7 @@ from aiohttp import ClientSession, ClientResponse
 from settings import get_global_settings
 
 _logger = logging.getLogger(__name__)
+_next_request_time = 0
 
 
 class ApiException(Exception):
@@ -38,6 +40,22 @@ class Api:
             "Accept": "application/json"
         }
 
+    @staticmethod
+    async def synchronisation_requests_sleep(load_ms: int = 1000) -> None:
+        """
+        :param load_ms: Задержка между всеми запросами (в милли-сек)
+        :return: None
+        """
+        current_ms = round(time() * 1000)
+        global _next_request_time
+
+        if _next_request_time > current_ms:
+            load_sec = (_next_request_time - current_ms) / 1000
+            _logger.debug(f"Load request on: {load_sec} seconds")
+            await asyncio.sleep(load_sec)
+
+        _next_request_time = current_ms + load_ms
+
     async def handle_error(self, response: ClientResponse):
         req_method = response.request_info.method
         res_status = response.status
@@ -45,6 +63,7 @@ class Api:
             raise ApiException(message=f"{req_method} Status is not be {res_status}: {response.reason}")
 
     async def get(self, url: str, params: dict = None, header: dict = None) -> ApiResponse:
+        await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
             response = await c.get(url, params=params, allow_redirects=False, timeout=1)
@@ -54,6 +73,7 @@ class Api:
         return ApiResponse(response.status, await response.json())
 
     async def post(self, url: str, params: dict | list = None, header: dict = None) -> ApiResponse:
+        await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
             response = await c.post(url, json=params, ssl=False, timeout=1)

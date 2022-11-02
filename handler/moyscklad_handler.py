@@ -184,6 +184,21 @@ class MoysckladHandler:
                     yclients_client_id = int(yclients_client['id'])
                     _logger.debug(f"Created new YClients agent with id:{yclients_client_id} ...")
 
+            # Create new YClients finance transaction
+            _logger.debug("Create new YClients finance transaction ...")
+            finance_transaction = await yclients_api.set_finance_transaction(
+                company_id=yclients_handler.company_id,
+                amount=order_sum,
+                client_id=(
+                    yclients_client_id
+                    if yclients_client_id is not None and yclients_client_id > 0
+                    else None
+                ),
+                comment=f"MoyScklad Synchronisation Order ({order_name})"
+            )
+            finance_document_id = int(finance_transaction['document_id'])
+
+            # Parse order positions assortment
             goods_transactions = []
             for row in positions_rows:
                 row_quantity = int(row['quantity'])
@@ -218,20 +233,6 @@ class MoysckladHandler:
                 if yclients_current_product_good_id > 0:
                     _logger.debug("YClients product good id is exists ...")
 
-                    # Create new YClients finance transaction
-                    _logger.debug("Create new YClients finance transaction ...")
-                    finance_transaction = await yclients_api.set_finance_transaction(
-                        company_id=yclients_handler.company_id,
-                        amount=product_price,
-                        client_id=(
-                            yclients_client_id
-                            if yclients_client_id is not None and yclients_client_id > 0
-                            else None
-                        ),
-                        comment=f"MoyScklad Synchronisation Product ({product_article})"
-                    )
-                    finance_document_id = int(finance_transaction['document_id'])
-
                     # Add YClients product to future storage transaction
                     _logger.debug(f"Add YClients product:{product_article} to future storage transaction ...")
                     product_good_data = {
@@ -247,6 +248,7 @@ class MoysckladHandler:
                     if yclients_client_id is not None and yclients_client_id > 0:
                         product_good_data['client_id'] = yclients_client_id
 
+                    # Add new good transaction
                     goods_transactions.append(product_good_data)
 
             # Create YClients product storage operation
