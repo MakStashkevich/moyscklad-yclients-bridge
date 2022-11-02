@@ -11,6 +11,7 @@ load_dotenv()
 
 class GlobalSettings(BaseSettings):
     is_debug: bool = False
+    is_trace_requests: bool = False
     timezone: str = "Europe/Moscow"
     language: str = "ru-RU"
 

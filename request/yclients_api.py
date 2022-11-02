@@ -1,7 +1,7 @@
 import datetime
 import enum
 
-from request.api import Api, ApiResponse, ApiException
+from request.api import Api, ApiException
 from settings import get_global_settings, get_yclients_settings, get_timezone
 
 
@@ -10,6 +10,11 @@ class YClientsApiStorageOperationType(enum.Enum):
     COMING = 3  # Приход
     WRITE_OFF = 4  # Списание
     MOVING = 5  # Перемещение
+
+
+class YClientsApiGoodOperationType(enum.Enum):
+    SELL = COMING = 1  # Продажа / Приход
+    WRITE_OFF = 4  # Списание
 
 
 class YClientsApi(Api):
@@ -86,32 +91,117 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
-    async def get_products(self, company_id: int) -> dict:
+    async def get_products(self, company_id: int, good_id: int = 0,
+                           *, count: int = 1000, page: int = 1, term: str = None) -> dict:
         """
         https://developers.yclients.com/ru/#tag/Tovary/operation/Получить%20товары
         :return:
         """
-        url = YClientsApi.URL.format(method="goods") + str(company_id)
-        req = await self.get(url, {
-            "count": 1000,
-            "page": 1
-        })
+        url = YClientsApi.URL.format(method="goods") + str(company_id) + "/"
+        if good_id is not None and good_id > 0:
+            url += str(good_id)
+
+        query_params = {
+            "count": count,
+            "page": page
+        }
+        if term is not None:
+            query_params['term'] = term  # Наименование, артикул или штрихкод
+
+        req = await self.get(url, query_params)
 
         response = req.response
         self.raise_failure_response(response)
         return response['data']
 
-    async def get_product(self, company_id: int, good_id: int) -> dict:
+    async def get_product_good_id_by_article(self, company_id: int, article: str) -> int:
+        products = await self.get_products(
+            company_id=company_id,
+            term=article
+        )
+
+        # Parse all products and search article
+        for product in products:
+            product_article = product['article'] if 'article' in product else None
+            if product_article is not None and len(product_article) > 0 and 'good_id' in product:
+                return int(product['good_id'])
+
+        return 0
+
+    async def set_client(self, company_id: int, name: str, phone: str,
+                         *,
+                         email: str = None,
+                         comment: str = None) -> dict:
         """
-        https://developers.yclients.com/ru/#tag/Tovary/operation/Получить%20товары
+        https://developers.yclients.com/ru/#tag/Klienty/operation/Добавить%20клиента
         :return:
         """
-        url = YClientsApi.URL.format(method="goods") + "/".join([str(company_id), str(good_id)])
-        req = await self.get(url)
+        url = YClientsApi.URL.format(method="clients") + str(company_id)
+        params = {
+            "name": name,
+            "phone": phone
+        }
+        if email is not None:
+            params["email"] = email
+        if comment is not None:
+            params["comment"] = comment
+        req = await self.post(url, params)
 
         response = req.response
         self.raise_failure_response(response)
         return response['data']
+
+    async def get_client_search(self, company_id: int,
+                                *,
+                                page: int = 1,
+                                page_size: int = 100,
+                                fields: list = None,
+                                order_by: str = "id",
+                                order_by_direction: str = "DESC",
+                                operation: str = "AND",
+                                filters: list = None) -> dict:
+        """
+        https://developers.yclients.com/ru/#tag/Klienty/operation/Получить%20список%20клиентов
+        :return:
+        """
+        fields = fields if fields is not None else ['id', 'name', 'phone', 'email']
+        filters = filters if filters is not None else []
+
+        url = YClientsApi.URL.format(method="company") + str(company_id) + "/clients/search"
+        params = {
+            "page": page,
+            "page_size": page_size,
+            "fields": fields,
+            "order_by": order_by,
+            "order_by_direction": order_by_direction,
+            "operation": operation,
+            "filters": filters
+        }
+        req = await self.post(url, params)
+
+        response = req.response
+        self.raise_failure_response(response)
+        return response['data']
+
+    async def get_client_search_by_value(self, company_id: int, value: str,
+                                         *, page: int = 1, page_size: int = 100) -> dict:
+        return await self.get_client_search(
+            company_id=company_id,
+            page=page,
+            page_size=page_size,
+            fields=['id', 'name', 'phone', 'email'],
+            order_by="id",
+            order_by_direction="DESC",
+            operation="AND",
+            filters=[
+                {
+                    "type": "quick_search",
+                    "state": {
+                        "value": value
+                    }
+                }
+            ]
+        )
 
     async def set_storage_operation(self, company_id: int,
                                     type_id: YClientsApiStorageOperationType,
@@ -137,6 +227,43 @@ class YClientsApi(Api):
             params["comment"] = comment
         req = await self.post(url, params)
 
+        response = req.response
+        self.raise_failure_response(response)
+        return response['data']
+
+    async def set_finance_transaction(self, company_id: int,
+                                      *,
+                                      expense_id: int = None,
+                                      amount: int = None,
+                                      account_id: int = None,
+                                      client_id: int = None,
+                                      supplier_id: int = None,
+                                      master_id: int = None,
+                                      comment: str = None) -> dict:
+        """
+        https://developers.yclients.com/ru/#tag/Finansovye-tranzakcii/operation/Создание%20финансовой%20транзакции
+        :return:
+        """
+        url = YClientsApi.URL.format(method="finance_transactions") + str(company_id)
+        params = {
+            "date": datetime.datetime.now(tz=get_timezone())
+        }
+        if expense_id is not None:
+            params["expense_id"] = expense_id
+        if amount is not None:
+            params["amount"] = amount
+        if account_id is not None:
+            params["account_id"] = account_id
+        if client_id is not None:
+            params["client_id"] = client_id
+        if supplier_id is not None:
+            params["supplier_id"] = supplier_id
+        if master_id is not None:
+            params["master_id"] = master_id
+        if comment is not None:
+            params["comment"] = comment
+
+        req = await self.post(url, params)
         response = req.response
         self.raise_failure_response(response)
         return response['data']

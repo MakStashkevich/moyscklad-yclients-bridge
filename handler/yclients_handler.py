@@ -58,18 +58,29 @@ class YClientsHandler:
             self.company_id = data.company_id
             self.storage_id = data.storage_id
             self.api.access_token = data.access_token
+            _logger.debug("Saved data from db ...")
 
     @db_session
     async def update_db_data(self):
         _logger.debug("Update db data ...")
         data = YClientsData.get(id=1)
-        if isinstance(data, YClientsData):
+        if isinstance(data, YClientsData) and (
+            data.company_id != self.company_id or
+            data.storage_id != self.storage_id or
+            data.access_token != self.api.access_token
+        ):
             data.company_id = self.company_id
             data.storage_id = self.storage_id
             data.access_token = self.api.access_token
             data.updated_at = datetime.datetime.now(tz=get_timezone())
+            _logger.debug("Updated data on db ...")
         else:
-            YClientsData(company_id=self.company_id, storage_id=self.storage_id, access_token=self.api.access_token)
+            YClientsData(
+                company_id=self.company_id,
+                storage_id=self.storage_id,
+                access_token=self.api.access_token
+            )
+            _logger.debug("Saved (created) data on db ...")
 
     async def prepare_company_id(self):
         _logger.debug("Prepare company id ...")
