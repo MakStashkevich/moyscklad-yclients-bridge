@@ -62,7 +62,7 @@ def get_database_settings():
 class WebserverSettings(BaseSettings):
     webserver_session_secret: str = token_hex()
     webserver_host: str = "localhost"
-    webserver_port: int = 3000
+    webserver_port: int = 80
 
 
 @lru_cache()
