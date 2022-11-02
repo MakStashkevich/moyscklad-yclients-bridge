@@ -3,8 +3,7 @@ import logging
 from aiohttp import web
 from aiohttp.abc import BaseRequest
 
-from handler import moyscklad_handler
-from handler.moyscklad_handler import MoysckladHandler
+from handler.moyscklad_handler import MoysckladHandler, moyscklad
 from webhook.routes.default_hook import get_json_response
 
 _logger = logging.getLogger(__name__)
@@ -18,8 +17,8 @@ async def handle_moyscklad_hook(request: BaseRequest):
     result = False
     _logger.debug(response)
 
-    if isinstance(moyscklad_handler, MoysckladHandler):
-        result = await moyscklad_handler.handle_webhook(response)
+    if isinstance(moyscklad, MoysckladHandler):
+        result = await moyscklad.handle_webhook(response)
 
     return web.json_response({
         'ok': result

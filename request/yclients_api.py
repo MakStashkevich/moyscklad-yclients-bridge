@@ -219,7 +219,7 @@ class YClientsApi(Api):
             "type_id": type_id.value,
             "storage_id": storage_id,
             "goods_transactions": goods_transactions,
-            "create_date": datetime.datetime.now(tz=get_timezone())
+            "create_date": str(datetime.datetime.now(tz=get_timezone()))
         }
         if master_id is not None:
             params["master_id"] = master_id
@@ -239,15 +239,14 @@ class YClientsApi(Api):
                                       client_id: int = None,
                                       supplier_id: int = None,
                                       master_id: int = None,
-                                      comment: str = None) -> dict:
+                                      comment: str = None,
+                                      date: str = None) -> dict:
         """
         https://developers.yclients.com/ru/#tag/Finansovye-tranzakcii/operation/Создание%20финансовой%20транзакции
         :return:
         """
         url = YClientsApi.URL.format(method="finance_transactions") + str(company_id)
-        params = {
-            "date": datetime.datetime.now(tz=get_timezone())
-        }
+        params = {}
         if expense_id is not None:
             params["expense_id"] = expense_id
         if amount is not None:
@@ -262,6 +261,8 @@ class YClientsApi(Api):
             params["master_id"] = master_id
         if comment is not None:
             params["comment"] = comment
+        if date is None:
+            params["date"] = str(datetime.datetime.now(tz=get_timezone()))
 
         req = await self.post(url, params)
         response = req.response

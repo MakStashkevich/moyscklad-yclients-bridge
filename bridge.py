@@ -4,7 +4,8 @@ import sys
 
 import webhook.webserver
 from database.database import bind_database
-from handler import yclients_handler, moyscklad_handler
+from handler.moyscklad_handler import moyscklad
+from handler.yclients_handler import yclients
 from request.api import ApiException
 from settings import get_global_settings
 
@@ -19,15 +20,15 @@ async def bridge_process():
     await bind_database()
 
     try:
-        await yclients_handler.connect()
-        await moyscklad_handler.connect()
+        await yclients.connect()
+        await moyscklad.connect()
         await webhook.webserver.connect()
 
         # wait forever
         await asyncio.Event().wait()
     except (ApiException, Exception) as ex:
         message = ex.message if isinstance(ex, ApiException) else str(ex)
-        _logger.error(f"Not connected: {message}")
+        _logger.error(f"Bridge not connected! {message}")
         if get_global_settings().is_debug:
             _logger.exception(ex)
         sys.exit(1)

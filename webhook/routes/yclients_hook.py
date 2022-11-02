@@ -3,7 +3,7 @@ import logging
 from aiohttp import web
 from aiohttp.abc import BaseRequest
 
-from handler import yclients_handler, YClientsHandler
+from handler.yclients_handler import YClientsHandler, yclients
 from webhook.routes.default_hook import get_json_response
 
 _logger = logging.getLogger(__name__)
@@ -17,8 +17,8 @@ async def handle_yclients_hook(request: BaseRequest):
     result = False
     _logger.debug(response)
 
-    if isinstance(yclients_handler, YClientsHandler):
-        result = await yclients_handler.handle_webhook(response)
+    if isinstance(yclients, YClientsHandler):
+        result = await yclients.handle_webhook(response)
 
     return web.json_response({
         'ok': result

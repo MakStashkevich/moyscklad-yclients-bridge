@@ -5,7 +5,8 @@ import logging
 from pony.orm import db_session
 
 from database.database import MoyscladData
-from handler import yclients_handler
+from handler.yclients_handler import yclients
+from request.api import ApiException
 from request.moyscklad_api import MoysckladApi, MoyscladApiWebhookActionType
 from request.yclients_api import YClientsApiGoodOperationType, YClientsApiStorageOperationType
 from settings import get_timezone, get_webserver_settings, get_global_settings
@@ -118,8 +119,9 @@ class MoysckladHandler:
         except KeyError as ex:
             _logger.error(f"Handle MoyScklad webhook have a key error: {ex}")
             return False
-        except Exception as ex:
-            _logger.error(f"Handle MoyScklad webhook is failed: {ex}")
+        except (ApiException, Exception) as ex:
+            message = ex.message if isinstance(ex, ApiException) else str(ex)
+            _logger.error(f"Handle MoyScklad webhook is failed: {message}")
             if get_global_settings().is_debug:
                 _logger.exception(ex)
             return False
@@ -135,7 +137,7 @@ class MoysckladHandler:
             order_positions: dict
     ) -> bool:
         _logger.info("Start synchronisation MoyScklad order with YClients ...")
-        yclients_api = yclients_handler.api
+        yclients_api = yclients.api
         try:
             # Order Positions Metadata
             _logger.debug("Get MoyScklad order positions metadata ...")
@@ -165,7 +167,7 @@ class MoysckladHandler:
                 # Search Agent on YClients
                 _logger.debug(f"Search YClients agent by email {agent_email} ...")
                 yclients_found_clients = await yclients_api.get_client_search_by_value(
-                    company_id=yclients_handler.company_id,
+                    company_id=yclients.company_id,
                     value=agent_email
                 )
                 if len(yclients_found_clients) > 0:
@@ -175,7 +177,7 @@ class MoysckladHandler:
                     # Create Agent on YClients
                     _logger.debug("Create new YClients agent ...")
                     yclients_client = await yclients_api.set_client(
-                        company_id=yclients_handler.company_id,
+                        company_id=yclients.company_id,
                         name=agent_name,
                         phone=agent_phone,
                         email=agent_email,
@@ -187,7 +189,7 @@ class MoysckladHandler:
             # Create new YClients finance transaction
             _logger.debug("Create new YClients finance transaction ...")
             finance_transaction = await yclients_api.set_finance_transaction(
-                company_id=yclients_handler.company_id,
+                company_id=yclients.company_id,
                 amount=order_sum,
                 client_id=(
                     yclients_client_id
@@ -225,7 +227,7 @@ class MoysckladHandler:
                 # Search yclients product good id by article
                 _logger.debug("Search YClients product good id by article ...")
                 yclients_current_product_good_id = await yclients_api.get_product_good_id_by_article(
-                    company_id=yclients_handler.company_id,
+                    company_id=yclients.company_id,
                     article=product_article
                 )
 
@@ -254,19 +256,23 @@ class MoysckladHandler:
             # Create YClients product storage operation
             _logger.debug("Create YClients product storage operation ...")
             await yclients_api.set_storage_operation(
-                company_id=yclients_handler.company_id,
+                company_id=yclients.company_id,
                 type_id=YClientsApiStorageOperationType.SELL,
                 goods_transactions=goods_transactions,
                 comment=f'MoyScklad Synchronisation Order ({order_name})'
             )
         except KeyError as ex:
-            _logger.error(f"Handle MoyScklad webhook have a key error: {ex}")
+            _logger.error(f"Synchronisation MoyScklad order with YClients have a key error: {ex}")
             return False
-        except Exception as ex:
-            _logger.error(f"Handle MoyScklad webhook is failed: {ex}")
+        except (ApiException, Exception) as ex:
+            message = ex.message if isinstance(ex, ApiException) else str(ex)
+            _logger.error(f"Synchronisation MoyScklad order with YClients is failed: {message}")
             if get_global_settings().is_debug:
                 _logger.exception(ex)
             return False
 
         _logger.info("Success synchronisation MoyScklad order with YClients!")
         return True
+
+
+moyscklad = MoysckladHandler()

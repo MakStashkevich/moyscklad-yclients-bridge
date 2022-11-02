@@ -66,7 +66,19 @@ class Api:
         await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
-            response = await c.get(url, params=params, allow_redirects=False, timeout=1)
+            response = None
+            attempts = 1
+            while response is None and attempts <= 3:
+                try:
+                    response = await c.get(url, params=params, allow_redirects=False)
+                except Exception:
+                    _logger.debug(f"Attempt {attempts} is timeout ...")
+                    response = None
+                    attempts += 1
+
+            if response is None:
+                raise ApiException(message=f"Server {url} is not responding ...")
+
             if response.status != 200:
                 await self.handle_error(response)
 
@@ -76,7 +88,19 @@ class Api:
         await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
-            response = await c.post(url, json=params, ssl=False, timeout=1)
+            response = None
+            attempts = 1
+            while response is None and attempts <= 3:
+                try:
+                    response = await c.post(url, json=params, ssl=False)
+                except Exception:
+                    _logger.debug(f"Attempt {attempts} ...")
+                    response = None
+                    attempts += 1
+
+            if response is None:
+                raise ApiException(message=f"Server {url} is not responding ...")
+
             if response.status != 200 and response.status != 201:
                 await self.handle_error(response)
 

@@ -113,3 +113,6 @@ class YClientsHandler:
 
     async def handle_webhook(self, response: dict):
         _logger.debug("Start handle webhook ...")
+
+
+yclients = YClientsHandler()
