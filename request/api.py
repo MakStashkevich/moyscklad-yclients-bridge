@@ -28,6 +28,7 @@ class ApiResponse:
 async def on_request_start(session, trace_config_ctx, params):
     _logger.debug("Starting %s request for %s. I will send: %s" % (params.method, params.url, params.headers))
 
+
 trace_config = aiohttp.TraceConfig()
 if get_global_settings().is_trace_requests:
     trace_config.on_request_start.append(on_request_start)
@@ -59,26 +60,15 @@ class Api:
     async def handle_error(self, response: ClientResponse):
         req_method = response.request_info.method
         res_status = response.status
-        if (req_method == "GET" and res_status != 200) or (req_method == "POST" and res_status != 200 and res_status != 201):
+        if (req_method == "GET" and res_status != 200) or (
+                req_method == "POST" and res_status != 200 and res_status != 201):
             raise ApiException(message=f"{req_method} Status is not be {res_status}: {response.reason}")
 
     async def get(self, url: str, params: dict = None, header: dict = None) -> ApiResponse:
         await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
-            response = None
-            attempts = 1
-            while response is None and attempts <= 3:
-                try:
-                    response = await c.get(url, params=params, allow_redirects=False)
-                except Exception:
-                    _logger.debug(f"Attempt {attempts} is timeout ...")
-                    response = None
-                    attempts += 1
-
-            if response is None:
-                raise ApiException(message=f"Server {url} is not responding ...")
-
+            response = await c.get(url, params=params, allow_redirects=False)
             if response.status != 200:
                 await self.handle_error(response)
 
@@ -88,19 +78,7 @@ class Api:
         await Api.synchronisation_requests_sleep()
         async with ClientSession(trace_configs=[trace_config],
                                  headers=self.header if header is None else header) as c:
-            response = None
-            attempts = 1
-            while response is None and attempts <= 3:
-                try:
-                    response = await c.post(url, json=params, ssl=False)
-                except Exception:
-                    _logger.debug(f"Attempt {attempts} ...")
-                    response = None
-                    attempts += 1
-
-            if response is None:
-                raise ApiException(message=f"Server {url} is not responding ...")
-
+            response = await c.post(url, json=params, ssl=False)
             if response.status != 200 and response.status != 201:
                 await self.handle_error(response)
 
