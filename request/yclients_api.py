@@ -34,7 +34,10 @@ class YClientsApi(Api):
         }
 
     @staticmethod
-    def raise_failure_response(response: dict) -> None:
+    def raise_failure_response(response: dict | list) -> None:
+        if type(response) is list:
+            raise ApiException(f'Response YClients Api not accepted list response: {response}')
+
         if response['success'] is False:
             message = response['meta']['message']
             raise ApiException(f'Response YClients Api not success: {message}')

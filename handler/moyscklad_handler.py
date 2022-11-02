@@ -25,11 +25,12 @@ class MoysckladHandler:
 
         current_webhooks = await self.api.get_webhooks()
         webhook_rows = current_webhooks['rows']
-        webhook_entity_type = "demand"
+
+        # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-nastrojki-pol-zowatelq
+        # Нижний раздел «Стартовые экраны»
+        webhook_entity_type = "customerorder"
         webhook_connected = False
         webhooks_meta = []
-
-        _logger.debug(webhook_rows)
 
         for webhook_data in webhook_rows:
             webhooks_meta.append({"meta": webhook_data['meta']})
@@ -42,7 +43,11 @@ class MoysckladHandler:
 
         if not webhook_connected:
             if len(webhooks_meta) > 0:
-                await self.api.delete_webhooks(webhooks_meta)
+                res = await self.api.delete_webhooks(webhooks_meta)
+                if type(res) is list:
+                    for r in res:
+                        _logger.debug(r['info'])
+
             await self.api.set_webhook(
                 url=webserver_hook_url,
                 entity_type=webhook_entity_type,

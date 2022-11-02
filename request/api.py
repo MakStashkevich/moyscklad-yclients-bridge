@@ -12,9 +12,9 @@ class ApiException(Exception):
 
 class ApiResponse:
     status: int = 200
-    response: dict = {}
+    response: dict | list = None
 
-    def __init__(self, status: int, response: dict):
+    def __init__(self, status: int, response: dict | list):
         self.status = status
         self.response = response
 
@@ -38,7 +38,7 @@ class Api:
             if response.status != 200:
                 await self.handle_error(response)
 
-        return ApiResponse(response.status, dict(await response.json()))
+        return ApiResponse(response.status, await response.json())
 
     async def post(self, url: str, params: dict | list = None, header: dict = None) -> ApiResponse:
         async with ClientSession(headers=self.header if header is None else header) as c:
@@ -46,4 +46,4 @@ class Api:
             if response.status != 200 and response.status != 201:
                 await self.handle_error(response)
 
-        return ApiResponse(response.status, dict(await response.json()))
+        return ApiResponse(response.status, await response.json())

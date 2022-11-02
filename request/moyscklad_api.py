@@ -128,8 +128,7 @@ class MoysckladApi(Api):
         req = await self.post(url, webhooks_meta)
         return req.response
 
-    async def set_webhook(self, url: str,
-                          entity_type: str = "demand",
+    async def set_webhook(self, url: str, entity_type: str,
                           action: MoyscladApiWebhookActionType = MoyscladApiWebhookActionType.CREATE) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-veb-huki-sozdat-web-huk
