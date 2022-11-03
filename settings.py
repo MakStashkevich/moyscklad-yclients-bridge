@@ -12,6 +12,9 @@ load_dotenv()
 class GlobalSettings(BaseSettings):
     is_debug: bool = False
     is_trace_requests: bool = False
+    delay_requests: int = 3000  # milliseconds
+    attempts_requests: int = 3  # try
+    timeout_requests: int = 30  # seconds
     timezone: str = "Europe/Moscow"
     language: str = "ru-RU"
 

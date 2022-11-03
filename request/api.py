@@ -9,17 +9,18 @@ from aiohttp_retry import ExponentialRetry, RetryClient
 from settings import get_global_settings
 
 _logger = logging.getLogger(__name__)
+_settings = get_global_settings()
 
 # Request load time
 _next_request_time = 0
 
-# Client session
-_client_timeout_sec = aiohttp.ClientTimeout(total=30)
-_retry_options = ExponentialRetry(attempts=3)
+# Client settings
+_client_timeout_sec = aiohttp.ClientTimeout(total=_settings.timeout_requests)
+_retry_options = ExponentialRetry(attempts=_settings.attempts_requests)
 
 # Trace config
 _trace_config = aiohttp.TraceConfig()
-if get_global_settings().is_trace_requests:
+if _settings.is_trace_requests:
     _trace_config.on_request_start.append(lambda session, trace_config_ctx, params: {
         _logger.debug("Starting %s request for %s. I will send: %s" % (params.method, params.url, params.headers))
     })
@@ -48,9 +49,9 @@ class Api:
         }
 
     @staticmethod
-    async def synchronisation_requests_sleep(load_ms: int = 3000) -> None:
+    async def synchronisation_requests_sleep(delay_ms: int = _settings.delay_requests) -> None:
         """
-        :param load_ms: Задержка между всеми запросами (в милли-сек)
+        :param delay_ms: Задержка между всеми запросами (в милли-сек)
         :return: None
         """
         current_ms = round(time() * 1000)
@@ -61,7 +62,7 @@ class Api:
             _logger.debug(f"Load request on: {load_sec} seconds")
             await asyncio.sleep(load_sec)
 
-        _next_request_time = current_ms + load_ms
+        _next_request_time = current_ms + delay_ms
 
     async def handle_error(self, response: ClientResponse):
         req_method = response.request_info.method
