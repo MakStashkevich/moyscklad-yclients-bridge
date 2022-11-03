@@ -5,13 +5,21 @@ from datetime import datetime
 from aiohttp import ClientResponse
 
 from request.api import Api, ApiException
-from settings import get_global_settings, get_moysclad_settings
+from settings import get_global_settings, get_moysclad_settings, get_timezone
 
 
 class MoyscladApiWebhookActionType(enum.Enum):
     CREATE = "CREATE"
     UPDATE = "UPDATE"
     DELETE = "DELETE"
+
+
+def current_datetime_moyscklad_string() -> str:
+    """
+    https://dev.moysklad.ru/doc/api/remap/1.2/#mojsklad-json-api-obschie-swedeniq-format-daty-i-wremeni
+    :return:
+    """
+    return datetime.now(tz=get_timezone()).strftime("%Y-%m-%d %H:%M:%S")
 
 
 class MoysckladApi(Api):
@@ -82,7 +90,7 @@ class MoysckladApi(Api):
         :return:
         """
         url = MoysckladApi.URL_ENTITY.format(method="product")
-        req = await self.post(url, products_list)
+        req = await self.post(url, params=products_list)
         return req.response
 
     async def get_organization_all(self, limit: int = 1000, offset: int = 0) -> dict:
@@ -137,14 +145,14 @@ class MoysckladApi(Api):
         return req.response
 
     async def set_receipts(self, organization_meta: dict, store_meta: dict, positions: list,
-                           *, name: str = None, description: str = None, moment: str = None) -> dict:
+                           *, name: str = None, description: str = None) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/documents/#dokumenty-oprihodowanie-sozdat-oprihodowaniq
         :return:
         """
         url = MoysckladApi.URL_ENTITY.format(method="enter")
         params = {
-            "moment": moment if moment is not None else str(datetime.now(tz=get_global_settings().timezone)),
+            "moment": current_datetime_moyscklad_string(),
             "organization": organization_meta,
             "store": store_meta,
             "positions": positions
@@ -158,14 +166,14 @@ class MoysckladApi(Api):
         return req.response
 
     async def set_loss(self, organization_meta: dict, store_meta: dict, positions: list,
-                       *, name: str = None, description: str = None, moment: str = None) -> dict:
+                       *, name: str = None, description: str = None) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/documents/#dokumenty-spisanie-sozdat-spisanie
         :return:
         """
         url = MoysckladApi.URL_ENTITY.format(method="loss")
         params = {
-            "moment": moment if moment is not None else str(datetime.now(tz=get_global_settings().timezone)),
+            "moment": current_datetime_moyscklad_string(),
             "organization": organization_meta,
             "store": store_meta,
             "positions": positions
