@@ -1,6 +1,8 @@
 import datetime
 import enum
 
+from aiohttp import ClientResponse
+
 from request.api import Api, ApiException
 from settings import get_global_settings, get_yclients_settings, get_timezone
 
@@ -34,8 +36,7 @@ class YClientsApi(Api):
             "Accept": "application/vnd.yclients.v2+json",
             "Accept-Language": get_global_settings().language,
             "Authorization": auth,
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache"
+            "Content-Type": "application/json"
         }
 
     @staticmethod
@@ -46,6 +47,14 @@ class YClientsApi(Api):
         if response['success'] is False:
             message = response['meta']['message']
             raise ApiException(f'Response YClients Api not success: {message}')
+
+    async def handle_error(self, response: ClientResponse):
+        json = await response.json()
+        if type(json) is dict and 'success' in json and json['success'] is False:
+            error = json['meta']['message'] if 'meta' in json and 'message' in json['meta'] else response.reason
+            raise ApiException(f"YClients Api Error: {error}")
+
+        await super().handle_error(response)
 
     async def get_access_token(self) -> str:
         """
@@ -202,6 +211,16 @@ class YClientsApi(Api):
                 }
             ]
         )
+
+    async def get_staff_data(self, company_id: int, staff_id: int = None) -> dict:
+        url = YClientsApi.URL.format(method="company") + str(company_id) + "/staff/"
+        if staff_id is not None and staff_id > 0:
+            url += str(staff_id)
+
+        req = await self.get(url)
+        response = req.response
+        self.raise_failure_response(response)
+        return response['data']
 
     async def set_storage_operation(self, company_id: int,
                                     type_id: YClientsApiStorageOperationType,

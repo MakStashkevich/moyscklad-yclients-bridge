@@ -14,6 +14,7 @@ class YClientsHandler:
     api: YClientsApi = None
     company_id: int = None
     storage_id: int = None
+    master_id: int = None
 
     def __init__(self):
         self.api = YClientsApi()
@@ -48,6 +49,7 @@ class YClientsHandler:
         await self.api.get_access_token()
         await self.prepare_company_id()
         await self.prepare_storage_id()
+        await self.prepare_master_id()
         await self.update_db_data()
 
     @db_session
@@ -110,6 +112,16 @@ class YClientsHandler:
         if not self.storage_id:
             raise RuntimeError("Storage id not found")
         _logger.debug(f"Storage id:{self.storage_id} found!")
+
+    async def prepare_master_id(self):
+        _logger.debug("Prepare master id ...")
+        if not self.master_id:
+            staff_list = await self.api.get_staff_data(company_id=self.company_id)
+            if type(staff_list) is list and len(staff_list) > 0:
+                self.master_id = int(staff_list[0]['id'])
+        if not self.master_id:
+            raise RuntimeError("Master id not found")
+        _logger.debug(f"Master id:{self.master_id} found!")
 
     async def handle_webhook(self, response: dict):
         _logger.debug("Start handle webhook ...")

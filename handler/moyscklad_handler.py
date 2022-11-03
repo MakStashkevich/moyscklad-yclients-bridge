@@ -187,18 +187,21 @@ class MoysckladHandler:
                     _logger.debug(f"Created new YClients agent with id:{yclients_client_id} ...")
 
             # Create new YClients finance transaction
-            _logger.debug("Create new YClients finance transaction ...")
-            finance_transaction = await yclients_api.set_finance_transaction(
-                company_id=yclients.company_id,
-                amount=order_sum,
-                client_id=(
-                    yclients_client_id
-                    if yclients_client_id is not None and yclients_client_id > 0
-                    else None
-                ),
-                comment=f"MoyScklad Synchronisation Order ({order_name})"
-            )
-            finance_document_id = int(finance_transaction['document_id'])
+            # _logger.debug("Create new YClients finance transaction ...")
+            # finance_transaction = await yclients_api.set_finance_transaction(
+            #     company_id=yclients.company_id,
+            #     amount=order_sum,
+            #     client_id=(
+            #         yclients_client_id
+            #         if yclients_client_id is not None and yclients_client_id > 0
+            #         else None
+            #     ),
+            #     comment=f"MoyScklad Synchronisation Order ({order_name})"
+            # )
+            # finance_document_id = int(finance_transaction['document_id'])
+
+            # Номер документа каким-то образом сам устанавливается при создании складской операции...
+            finance_document_id = 0
 
             # Parse order positions assortment
             goods_transactions = []
@@ -258,6 +261,8 @@ class MoysckladHandler:
             await yclients_api.set_storage_operation(
                 company_id=yclients.company_id,
                 type_id=YClientsApiStorageOperationType.SELL,
+                storage_id=yclients.storage_id,
+                master_id=yclients.master_id,
                 goods_transactions=goods_transactions,
                 comment=f'MoyScklad Synchronisation Order ({order_name})'
             )

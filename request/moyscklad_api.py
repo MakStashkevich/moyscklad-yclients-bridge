@@ -26,8 +26,7 @@ class MoysckladApi(Api):
             "Accept": "application/json;charset=utf-8",
             "Accept-Language": get_global_settings().language,
             "Authorization": "Bearer {}".format(self.access_token),
-            "Content-Type": "application/json",
-            "Cache-Control": "no-cache"
+            "Content-Type": "application/json"
         }
 
     async def handle_error(self, response: ClientResponse):
@@ -35,10 +34,12 @@ class MoysckladApi(Api):
         https://dev.moysklad.ru/doc/api/remap/1.2/#mojsklad-json-api-obschie-swedeniq-obrabotka-oshibok
         :return:
         """
-        json = dict(await response.json())
-        if json['errors']:
+        json = await response.json()
+        if type(json) is dict and 'errors' in json and type(json['errors']) is list:
             error = json['errors'][0]
-            raise ApiException(error['error'] + f" ({error['code']}: {error['moreInfo']})")
+            raise ApiException("MoyScklad Api Error: " + error['error'] + f" ({error['code']}: {error['moreInfo']})")
+
+        await super().handle_error(response)
 
     async def get_access_token(self) -> str:
         """

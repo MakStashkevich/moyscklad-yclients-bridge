@@ -8,6 +8,7 @@ from aiohttp import ClientSession, ClientResponse
 from settings import get_global_settings
 
 _logger = logging.getLogger(__name__)
+_client_timeout_sec = aiohttp.ClientTimeout(total=30)
 _next_request_time = 0
 
 
@@ -38,11 +39,12 @@ class Api:
     @property
     def header(self) -> dict:
         return {
-            "Accept": "application/json"
+            "Accept": "application/json",
+            # "Cache-Control": "no-cache"
         }
 
     @staticmethod
-    async def synchronisation_requests_sleep(load_ms: int = 1000) -> None:
+    async def synchronisation_requests_sleep(load_ms: int = 3000) -> None:
         """
         :param load_ms: Задержка между всеми запросами (в милли-сек)
         :return: None
@@ -66,7 +68,7 @@ class Api:
 
     async def get(self, url: str, params: dict = None, header: dict = None) -> ApiResponse:
         await Api.synchronisation_requests_sleep()
-        async with ClientSession(trace_configs=[trace_config],
+        async with ClientSession(trace_configs=[trace_config], timeout=_client_timeout_sec,
                                  headers=self.header if header is None else header) as c:
             response = await c.get(url, params=params, allow_redirects=False)
             if response.status != 200:
@@ -76,7 +78,7 @@ class Api:
 
     async def post(self, url: str, params: dict | list = None, header: dict = None) -> ApiResponse:
         await Api.synchronisation_requests_sleep()
-        async with ClientSession(trace_configs=[trace_config],
+        async with ClientSession(trace_configs=[trace_config], timeout=_client_timeout_sec,
                                  headers=self.header if header is None else header) as c:
             response = await c.post(url, json=params, ssl=False)
             if response.status != 200 and response.status != 201:
