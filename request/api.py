@@ -4,12 +4,25 @@ from time import time
 
 import aiohttp
 from aiohttp import ClientSession, ClientResponse
+from aiohttp_retry import ExponentialRetry, RetryClient
 
 from settings import get_global_settings
 
 _logger = logging.getLogger(__name__)
-_client_timeout_sec = aiohttp.ClientTimeout(total=30)
+
+# Request load time
 _next_request_time = 0
+
+# Client session
+_client_timeout_sec = aiohttp.ClientTimeout(total=30)
+_retry_options = ExponentialRetry(attempts=3)
+
+# Trace config
+_trace_config = aiohttp.TraceConfig()
+if get_global_settings().is_trace_requests:
+    _trace_config.on_request_start.append(lambda session, trace_config_ctx, params: {
+        _logger.debug("Starting %s request for %s. I will send: %s" % (params.method, params.url, params.headers))
+    })
 
 
 class ApiException(Exception):
@@ -24,15 +37,6 @@ class ApiResponse:
     def __init__(self, status: int, response: dict | list):
         self.status = status
         self.response = response
-
-
-async def on_request_start(session, trace_config_ctx, params):
-    _logger.debug("Starting %s request for %s. I will send: %s" % (params.method, params.url, params.headers))
-
-
-trace_config = aiohttp.TraceConfig()
-if get_global_settings().is_trace_requests:
-    trace_config.on_request_start.append(on_request_start)
 
 
 class Api:
@@ -68,9 +72,21 @@ class Api:
 
     async def get(self, url: str, params: dict = None, header: dict = None) -> ApiResponse:
         await Api.synchronisation_requests_sleep()
-        async with ClientSession(trace_configs=[trace_config], timeout=_client_timeout_sec,
-                                 headers=self.header if header is None else header) as c:
-            response = await c.get(url, params=params, allow_redirects=False)
+
+        client_session = ClientSession(
+            trace_configs=[_trace_config],
+            timeout=_client_timeout_sec,
+            headers=self.header if header is None else header
+        )
+        retry_client = RetryClient(
+            logger=_logger,
+            raise_for_status=False,
+            retry_options=_retry_options,
+            client_session=client_session
+        )
+
+        async with retry_client as client:
+            response = await client.get(url, params=params, allow_redirects=False)
             if response.status != 200:
                 await self.handle_error(response)
 
@@ -78,9 +94,21 @@ class Api:
 
     async def post(self, url: str, params: dict | list = None, header: dict = None) -> ApiResponse:
         await Api.synchronisation_requests_sleep()
-        async with ClientSession(trace_configs=[trace_config], timeout=_client_timeout_sec,
-                                 headers=self.header if header is None else header) as c:
-            response = await c.post(url, json=params, ssl=False)
+
+        client_session = ClientSession(
+            trace_configs=[_trace_config],
+            timeout=_client_timeout_sec,
+            headers=self.header if header is None else header
+        )
+        retry_client = RetryClient(
+            logger=_logger,
+            raise_for_status=False,
+            retry_options=_retry_options,
+            client_session=client_session
+        )
+
+        async with retry_client as client:
+            response = await client.post(url, json=params, ssl=False)
             if response.status != 200 and response.status != 201:
                 await self.handle_error(response)
 
