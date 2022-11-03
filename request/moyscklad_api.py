@@ -1,5 +1,6 @@
 import base64
 import enum
+from datetime import datetime
 
 from aiohttp import ClientResponse
 
@@ -15,6 +16,7 @@ class MoyscladApiWebhookActionType(enum.Enum):
 
 class MoysckladApi(Api):
     URL_ENTITY: str = "https://online.moysklad.ru/api/remap/1.2/entity/{method}/"
+    URL_REPORT: str = "https://online.moysklad.ru/api/remap/1.2/report/{method}/"
     URL_SECURITY: str = "https://online.moysklad.ru/api/remap/1.2/security/{method}/"
 
     def __init__(self):
@@ -62,13 +64,16 @@ class MoysckladApi(Api):
 
         return self.access_token
 
-    async def get_products(self) -> dict:
+    async def get_products(self, limit: int = 1000, offset: int = 0) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-towar-poluchit-spisok-towarow
         :return:
         """
         url = MoysckladApi.URL_ENTITY.format(method="product")
-        req = await self.get(url)
+        req = await self.get(url, params={
+            "limit": limit,
+            "offset": offset
+        })
         return req.response
 
     async def set_products(self, products_list: list) -> dict:
@@ -80,35 +85,55 @@ class MoysckladApi(Api):
         req = await self.post(url, products_list)
         return req.response
 
-    async def set_receipts(self, name: str, organization_meta: dict, store_meta: dict, positions: list) -> dict:
+    async def get_stock_all(self) -> dict:
+        """
+        https://dev.moysklad.ru/doc/api/remap/1.2/reports/#otchety-otchet-ostatki-poluchit-wse-ostatki
+        :return:
+        """
+        url = MoysckladApi.URL_REPORT.format(method="stock/all")
+        req = await self.get(url)
+        return req.response
+
+    async def set_receipts(self, organization_meta: dict, store_meta: dict, positions: list,
+                           *, name: str = None, description: str = None, moment: str = None) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/documents/#dokumenty-oprihodowanie-sozdat-oprihodowaniq
-
-        "positions": [
-          {
-            "quantity": 1,
-            "price": 0,
-            "assortment": {
-              "meta": {
-                "href": "https://online.moysklad.ru/api/remap/1.2/entity/product/328b0454-2e62-11e6-8a84-bae500000118",
-                "metadataHref": "https://online.moysklad.ru/api/remap/1.2/entity/product/metadata",
-                "type": "product",
-                "mediaType": "application/json"
-              }
-            },
-            "overhead": 0
-          }
-        ]
-
         :return:
         """
         url = MoysckladApi.URL_ENTITY.format(method="enter")
-        req = await self.post(url, {
-            "name": name,
+        params = {
+            "moment": moment if moment is not None else str(datetime.now(tz=get_global_settings().timezone)),
             "organization": organization_meta,
             "store": store_meta,
             "positions": positions
-        })
+        }
+        if name is not None:
+            params['name'] = name
+        if description is not None:
+            params['description'] = description
+
+        req = await self.post(url, params=params)
+        return req.response
+
+    async def set_loss(self, organization_meta: dict, store_meta: dict, positions: list,
+                       *, name: str = None, description: str = None, moment: str = None) -> dict:
+        """
+        https://dev.moysklad.ru/doc/api/remap/1.2/documents/#dokumenty-spisanie-sozdat-spisanie
+        :return:
+        """
+        url = MoysckladApi.URL_ENTITY.format(method="loss")
+        params = {
+            "moment": moment if moment is not None else str(datetime.now(tz=get_global_settings().timezone)),
+            "organization": organization_meta,
+            "store": store_meta,
+            "positions": positions
+        }
+        if name is not None:
+            params['name'] = name
+        if description is not None:
+            params['description'] = description
+
+        req = await self.post(url, params=params)
         return req.response
 
     async def get_webhooks(self) -> dict:

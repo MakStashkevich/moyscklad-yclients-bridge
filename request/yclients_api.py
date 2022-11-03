@@ -1,5 +1,5 @@
-import datetime
 import enum
+from datetime import datetime
 
 from aiohttp import ClientResponse
 
@@ -101,7 +101,7 @@ class YClientsApi(Api):
         return response['data']
 
     async def get_products(self, company_id: int, good_id: int = 0,
-                           *, count: int = 1000, page: int = 1, term: str = None) -> dict:
+                           *, count: int = 1000, page: int = 1, term: str = None) -> dict | list:
         """
         https://developers.yclients.com/ru/#tag/Tovary/operation/Получить%20товары
         :return:
@@ -129,7 +129,10 @@ class YClientsApi(Api):
             term=article
         )
 
-        # Parse all products and search article
+        if type(products) is not list:
+            return 0
+
+        # Parse all products and search good_id
         for product in products:
             product_article = product['article'] if 'article' in product else None
             if product_article is not None and len(product_article) > 0 and 'good_id' in product:
@@ -228,7 +231,8 @@ class YClientsApi(Api):
                                     goods_transactions: list,
                                     *,
                                     master_id: int = None,
-                                    comment: str = None) -> dict:
+                                    comment: str = None,
+                                    create_date: str = None) -> dict:
         """
         https://developers.yclients.com/ru/#tag/Skladskie-operacii/operation/Создание%20складской%20операции
         :return:
@@ -238,7 +242,7 @@ class YClientsApi(Api):
             "type_id": type_id.value,
             "storage_id": storage_id,
             "goods_transactions": goods_transactions,
-            "create_date": str(datetime.datetime.now(tz=get_timezone()))
+            "create_date": create_date if create_date is not None else str(datetime.now(tz=get_timezone()))
         }
         if master_id is not None:
             params["master_id"] = master_id
@@ -265,7 +269,9 @@ class YClientsApi(Api):
         :return:
         """
         url = YClientsApi.URL.format(method="finance_transactions") + str(company_id)
-        params = {}
+        params = {
+            "date": date if date is not None else str(datetime.now(tz=get_timezone()))
+        }
         if expense_id is not None:
             params["expense_id"] = expense_id
         if amount is not None:
@@ -280,8 +286,6 @@ class YClientsApi(Api):
             params["master_id"] = master_id
         if comment is not None:
             params["comment"] = comment
-        if date is None:
-            params["date"] = str(datetime.datetime.now(tz=get_timezone()))
 
         req = await self.post(url, params)
         response = req.response
