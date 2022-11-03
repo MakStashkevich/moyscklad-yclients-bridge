@@ -46,12 +46,21 @@ async def sync_moyscklad_order_with_yclients(
         # Check is individual agent & create him
         yclients_client_id = 0
         if agent_company_type == "individual" and agent_phone is not None and len(agent_phone) > 0:
-            # Search Agent on YClients
+            # Search Agent on YClients by email
             _logger.debug(f"Search YClients agent by email {agent_email} ...")
             yclients_found_clients = await yclients_api.get_client_search_by_value(
                 company_id=yclients.company_id,
                 value=agent_email
             )
+
+            # Search Agent on YClients by phone number
+            if len(yclients_found_clients) < 1:
+                _logger.debug(f"Search YClients agent by phone number {agent_phone} ...")
+                yclients_found_clients = await yclients_api.get_client_search_by_value(
+                    company_id=yclients.company_id,
+                    value=agent_phone
+                )
+
             if len(yclients_found_clients) > 0:
                 yclients_client_id = yclients_found_clients[0]['id']
                 _logger.debug(f"Found YClients agent with id:{yclients_client_id} ...")
