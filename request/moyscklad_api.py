@@ -85,6 +85,48 @@ class MoysckladApi(Api):
         req = await self.post(url, products_list)
         return req.response
 
+    async def get_organization_all(self, limit: int = 1000, offset: int = 0) -> dict:
+        """
+        https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-jurlico-poluchit-spisok-urlic
+        :return:
+        """
+        url = MoysckladApi.URL_ENTITY.format(method="organization")
+        req = await self.get(url, params={
+            "limit": limit,
+            "offset": offset
+        })
+        return req.response
+
+    async def get_first_organization(self) -> dict | None:
+        organization_all = await self.get_organization_all()
+        organization_rows = organization_all['rows']
+
+        if type(organization_rows) is list and len(organization_rows) > 0:
+            return organization_rows[0]
+
+        return None
+
+    async def get_store_all(self, limit: int = 1000, offset: int = 0) -> dict:
+        """
+        https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-sklad-poluchit-sklady
+        :return:
+        """
+        url = MoysckladApi.URL_ENTITY.format(method="store")
+        req = await self.get(url, params={
+            "limit": limit,
+            "offset": offset
+        })
+        return req.response
+
+    async def get_first_store(self) -> dict | None:
+        store_all = await self.get_store_all()
+        store_rows = store_all['rows']
+
+        if type(store_rows) is list and len(store_rows) > 0:
+            return store_rows[0]
+
+        return None
+
     async def get_stock_all(self) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/reports/#otchety-otchet-ostatki-poluchit-wse-ostatki

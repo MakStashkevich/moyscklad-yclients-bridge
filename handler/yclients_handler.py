@@ -372,23 +372,38 @@ class YClientsHandler:
                 _logger.info("Update MoyScklad products ...")
                 await moyscklad_api.set_products(update_moyscklad_products)
 
-            if len(update_moyscklad_receipts) > 0:
-                _logger.info("Update MoyScklad receipts ...")
-                await moyscklad_api.set_receipts(
-                    description="YClients Sync",
-                    organization_meta={},
-                    store_meta={},
-                    positions=update_moyscklad_receipts
-                )
+            if len(update_moyscklad_receipts) > 0 or len(update_moyscklad_loss) > 0:
+                _logger.debug("Get first MoyScklad organization ...")
+                first_organization = await moyscklad_api.get_first_organization()
+                if first_organization is None:
+                    _logger.error("MoyScklad first organization is none ...")
+                    return False
+                organization_meta = first_organization['meta']
 
-            if len(update_moyscklad_loss) > 0:
-                _logger.info("Update MoyScklad loss ...")
-                await moyscklad_api.set_loss(
-                    description="YClients Sync",
-                    organization_meta={},
-                    store_meta={},
-                    positions=update_moyscklad_loss
-                )
+                _logger.debug("Get first MoyScklad store ...")
+                first_store = await moyscklad_api.get_first_store()
+                if first_store is None:
+                    _logger.error("MoyScklad first store is none ...")
+                    return False
+                store_meta = first_store['meta']
+
+                if len(update_moyscklad_receipts) > 0:
+                    _logger.info("Update MoyScklad receipts ...")
+                    await moyscklad_api.set_receipts(
+                        description="YClients Sync",
+                        organization_meta=organization_meta,
+                        store_meta=store_meta,
+                        positions=update_moyscklad_receipts
+                    )
+
+                if len(update_moyscklad_loss) > 0:
+                    _logger.info("Update MoyScklad loss ...")
+                    await moyscklad_api.set_loss(
+                        description="YClients Sync",
+                        organization_meta=organization_meta,
+                        store_meta=store_meta,
+                        positions=update_moyscklad_loss
+                    )
         except KeyError as ex:
             _logger.error(f"Synchronisation MoyScklad order with YClients have a key error: {ex}")
             return False
