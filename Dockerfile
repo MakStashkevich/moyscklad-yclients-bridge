@@ -10,6 +10,4 @@ RUN pip install --no-cache-dir --upgrade -r /bridge/requirements.txt
 
 COPY . /bridge/
 
-VOLUME "./bridge.session:/bridge/bridge.session"
-
 ENTRYPOINT ["python", "-m", "bridge"]

@@ -62,17 +62,12 @@ class YClientsHandler:
             self.company_id = data.company_id
             self.storage_id = data.storage_id
             self.api.access_token = data.access_token
-            _logger.debug("Saved data from db ...")
+            _logger.debug("Use saved data from db ...")
 
     @db_session
     async def update_db_data(self):
-        _logger.debug("Update db data ...")
         data = YClientsData.get(id=1)
-        if isinstance(data, YClientsData) and (
-                data.company_id != self.company_id or
-                data.storage_id != self.storage_id or
-                data.access_token != self.api.access_token
-        ):
+        if isinstance(data, YClientsData):
             data.company_id = self.company_id
             data.storage_id = self.storage_id
             data.access_token = self.api.access_token
