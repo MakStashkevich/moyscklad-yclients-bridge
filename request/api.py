@@ -41,6 +41,9 @@ def timeout_attempt_request(fn):
                 attempts += 1
                 result = None
 
+        if result is None:
+            raise ApiException("The request and attempts have expired")
+
         return result
 
     return wrap

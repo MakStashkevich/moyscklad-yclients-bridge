@@ -8,6 +8,7 @@ from settings import get_global_settings
 _logger = logging.getLogger(__name__)
 _settings = get_global_settings()
 
+is_process = False
 moyscklad_api = moyscklad.api
 
 
@@ -20,6 +21,9 @@ async def sync_yclients_products_with_moyscklad(
         product_article: str = None,
         product_cost: int = None,
 ) -> bool:
+    global is_process
+    is_process = True
+
     _logger.info("Start synchronisation YClients products with MoyScklad ...")
     update_yclients_products = {}
 
@@ -224,6 +228,8 @@ async def sync_yclients_products_with_moyscklad(
         if _settings.is_debug:
             _logger.exception(ex)
         return False
+    finally:
+        is_process = False
 
     _logger.info("Success synchronisation YClients products with MoyScklad!")
     return True
