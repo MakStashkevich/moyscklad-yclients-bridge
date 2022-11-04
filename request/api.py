@@ -34,6 +34,7 @@ def timeout_attempt_request(func):
             try:
                 result = await func(*args, **kwargs)
             except asyncio.exceptions.TimeoutError:
+                _logger.debug(f"Request attempt #{attempts} is false ...")
                 attempts += 1
                 result = None
 
