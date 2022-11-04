@@ -6,12 +6,13 @@ import aiohttp
 from aiohttp import ClientSession, ClientResponse
 
 from settings import get_global_settings
+from utils.decorators import optional_arg_decorator
 
 _logger = logging.getLogger(__name__)
 _settings = get_global_settings()
 
-# Request load time
-_next_request_time = 0
+# Request timeout
+_requests_timeout = 0
 
 # Client settings
 _client_timeout_sec = aiohttp.ClientTimeout(total=_settings.timeout_requests)
@@ -21,22 +22,53 @@ _trace_config = aiohttp.TraceConfig()
 if _settings.is_trace_requests:
     async def on_request_start_trace(session, trace_config_ctx, params):
         _logger.debug("Starting %s request for %s. I will send: %s" % (params.method, params.url, params.headers))
+
+
     _trace_config.on_request_start.append(on_request_start_trace)
 
 
 # Timeout attempt wrapper
-def timeout_attempt_request(func):
+def timeout_attempt_request(fn):
     async def wrap(*args, **kwargs):
         max_attempts = _settings.attempts_requests
         attempts = 1
         result = None
         while result is None and attempts <= max_attempts:
             try:
-                result = await func(*args, **kwargs)
+                result = await fn(*args, **kwargs)
             except asyncio.exceptions.TimeoutError:
                 _logger.debug(f"Request attempt #{attempts} is false ...")
                 attempts += 1
                 result = None
+
+        return result
+
+    return wrap
+
+
+# Cache data
+_cache_results = {}
+_cache_timeout = {}
+
+
+@optional_arg_decorator
+def cache_result_request(fn, delay_ms: int = _settings.delay_cache):
+    async def wrap(*args, **kwargs):
+        func_name = str(fn.__name__).lower()
+        func_hash = hash(func_name + str(args))
+
+        current_ms = round(time() * 1000)
+        global _cache_results
+        global _cache_timeout
+
+        if func_hash in _cache_timeout and _cache_timeout[func_hash] > current_ms and func_hash in _cache_results:
+            _logger.debug(f"Get results for request function:{func_name}{args} from cache ...")
+            return _cache_results[func_hash]
+
+        result = await fn(*args, **kwargs)
+        if delay_ms > 0:
+            _cache_results[func_hash] = result
+            _cache_timeout[func_hash] = current_ms + delay_ms
 
         return result
 
@@ -72,14 +104,15 @@ class Api:
         :return: None
         """
         current_ms = round(time() * 1000)
-        global _next_request_time
+        global _requests_timeout
 
-        if _next_request_time > current_ms:
-            load_sec = (_next_request_time - current_ms) / 1000
+        if _requests_timeout > current_ms:
+            load_sec = (_requests_timeout - current_ms) / 1000
             _logger.debug(f"Load request on: {load_sec} seconds")
             await asyncio.sleep(load_sec)
 
-        _next_request_time = current_ms + delay_ms
+        if delay_ms > 0:
+            _requests_timeout = current_ms + delay_ms
 
     async def handle_error(self, response: ClientResponse):
         req_method = response.request_info.method

@@ -3,7 +3,7 @@ from datetime import datetime
 
 from aiohttp import ClientResponse
 
-from request.api import Api, ApiException
+from request.api import Api, ApiException, cache_result_request
 from settings import get_global_settings, get_yclients_settings, get_timezone
 
 
@@ -74,6 +74,7 @@ class YClientsApi(Api):
 
         return self.access_token
 
+    @cache_result_request
     async def get_companies(self) -> dict:
         """
         https://developers.yclients.com/ru/#tag/Kompanii/operation/Получить%20список%20компаний
@@ -88,6 +89,7 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
+    @cache_result_request
     async def get_storages(self, company_id: int) -> dict:
         """
         https://developers.yclients.com/ru/#tag/Sklady/operation/Получить%20склады%20компании
@@ -100,6 +102,7 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
+    @cache_result_request
     async def get_products(self, company_id: int, good_id: int = 0,
                            *, count: int = 1000, page: int = 1, term: str = None) -> dict | list:
         """
@@ -123,6 +126,7 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
+    @cache_result_request
     async def get_product_good_id_by_article(self, company_id: int, article: str) -> int:
         products = await self.get_products(
             company_id=company_id,
@@ -163,6 +167,7 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
+    @cache_result_request
     async def get_client_search(self, company_id: int,
                                 *,
                                 page: int = 1,
@@ -195,6 +200,7 @@ class YClientsApi(Api):
         self.raise_failure_response(response)
         return response['data']
 
+    @cache_result_request
     async def get_client_search_by_value(self, company_id: int, value: str,
                                          *, page: int = 1, page_size: int = 100) -> dict:
         return await self.get_client_search(
@@ -215,6 +221,7 @@ class YClientsApi(Api):
             ]
         )
 
+    @cache_result_request
     async def get_staff_data(self, company_id: int, staff_id: int = None) -> dict:
         url = YClientsApi.URL.format(method="company") + str(company_id) + "/staff/"
         if staff_id is not None and staff_id > 0:

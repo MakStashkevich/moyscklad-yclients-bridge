@@ -4,7 +4,7 @@ from datetime import datetime
 
 from aiohttp import ClientResponse
 
-from request.api import Api, ApiException
+from request.api import Api, ApiException, cache_result_request
 from settings import get_global_settings, get_moysclad_settings, get_timezone
 
 
@@ -72,6 +72,7 @@ class MoysckladApi(Api):
 
         return self.access_token
 
+    @cache_result_request
     async def get_products(self, limit: int = 1000, offset: int = 0) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-towar-poluchit-spisok-towarow
@@ -93,6 +94,7 @@ class MoysckladApi(Api):
         req = await self.post(url, params=products_list)
         return req.response
 
+    @cache_result_request
     async def get_organization_all(self, limit: int = 1000, offset: int = 0) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-jurlico-poluchit-spisok-urlic
@@ -105,6 +107,7 @@ class MoysckladApi(Api):
         })
         return req.response
 
+    @cache_result_request
     async def get_first_organization(self) -> dict | None:
         organization_all = await self.get_organization_all()
         organization_rows = organization_all['rows']
@@ -114,6 +117,7 @@ class MoysckladApi(Api):
 
         return None
 
+    @cache_result_request
     async def get_store_all(self, limit: int = 1000, offset: int = 0) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-sklad-poluchit-sklady
@@ -126,6 +130,7 @@ class MoysckladApi(Api):
         })
         return req.response
 
+    @cache_result_request
     async def get_first_store(self) -> dict | None:
         store_all = await self.get_store_all()
         store_rows = store_all['rows']
@@ -135,6 +140,7 @@ class MoysckladApi(Api):
 
         return None
 
+    @cache_result_request
     async def get_stock_all(self) -> dict:
         """
         https://dev.moysklad.ru/doc/api/remap/1.2/reports/#otchety-otchet-ostatki-poluchit-wse-ostatki
