@@ -24,17 +24,26 @@ class YClientsHandler:
     async def connect(self):
         _logger.debug("Try connect to YClients ...")
         await self.prepare()
+        await self.set_server_webhook()
+        _logger.info("Successful connected to YClients!")
+        
+    async def set_server_webhook(self):
+        if not get_yclients_settings().yclients_webhook_set:
+            return
 
         webserver_settings = get_webserver_settings()
         webserver_hook_url = f"http://{webserver_settings.webserver_host}:{webserver_settings.webserver_port}/yclients/"
 
         current_webhooks = await self.api.get_hook_settings(self.company_id)
-        if webserver_hook_url not in current_webhooks['urls']:
+        current_webhooks_urls = current_webhooks['urls']
+        if webserver_hook_url not in current_webhooks_urls:
             _logger.debug("Webhook not found ...")
             _logger.debug("Set new webhook ...")
+
+            current_webhooks_urls.append(webserver_hook_url)
             await self.api.set_hook_settings(
                 company_id=self.company_id,
-                urls=[webserver_hook_url],
+                urls=current_webhooks_urls,
                 active=True,  # уведомления активны
                 good=True,  # товар
                 goods_operations_sale=True,  # продажа товара
@@ -44,11 +53,9 @@ class YClientsHandler:
                 self_sending=True,  # создатель webhook получает события, которые инициированы им
             )
 
-        _logger.info("Successful connected to YClients!")
-
     async def prepare(self):
         await self.prepare_db_data()
-        await self.api.get_access_token()
+        await self.prepare_access_token()
         await self.prepare_company_id()
         await self.prepare_storage_id()
         await self.prepare_master_id()
@@ -80,6 +87,13 @@ class YClientsHandler:
                 access_token=self.api.access_token
             )
             _logger.debug("Saved (created) data on db ...")
+
+    async def prepare_access_token(self):
+        settings = get_yclients_settings()
+        if settings.yclients_api_user_token is not None:
+            self.api.access_token = settings.yclients_api_user_token
+        else:
+            await self.api.get_access_token()
 
     async def prepare_company_id(self):
         _logger.debug("Prepare company id ...")

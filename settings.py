@@ -32,6 +32,8 @@ def get_timezone():
 
 class YClientsSettings(BaseSettings):
     yclients_api_partner_token: str = None
+    yclients_api_user_token: str = None
+    yclients_webhook_set: bool = False
     yclients_login: str = None
     yclients_password: str = None
     yclients_company_name: str = None
