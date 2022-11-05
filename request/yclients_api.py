@@ -136,7 +136,7 @@ class YClientsApi(Api):
         is_full = False
         while not is_full:
             current_products = await self.get_products(company_id=company_id, count=100, page=page_number)
-            if type(current_products) is list and len(current_products) > 0 and page_number >= limit_page:
+            if type(current_products) is list and len(current_products) > 0 and page_number < limit_page:
                 products_list += current_products
                 page_number += 1
             else:
