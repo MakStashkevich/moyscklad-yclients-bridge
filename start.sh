@@ -2,6 +2,7 @@
 
 if ! [ -x "$(command -v docker)" ]; then
   echo "Not found Docker to start ..."
+  sudo chmod +x ./scripts/init_docker_engine.sh
   sudo ./scripts/init_docker_engine.sh
 fi
 echo "Remove old bridge container ..."
