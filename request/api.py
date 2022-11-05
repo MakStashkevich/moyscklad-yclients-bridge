@@ -58,7 +58,9 @@ _cache_timeout = {}
 def cache_result_request(fn, delay_ms: int = _settings.delay_cache):
     async def wrap(*args, **kwargs):
         func_name = str(fn.__name__).lower()
-        func_hash = hash(func_name + str(args))
+        kwd_mark = object()  # sentinel for separating args from kwargs
+        key = (func_name,) + args + (kwd_mark,) + tuple(sorted(kwargs.items()))
+        func_hash = hash(key)
 
         current_ms = round(time() * 1000)
         global _cache_results
