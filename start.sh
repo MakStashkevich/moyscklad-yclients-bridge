@@ -8,10 +8,10 @@ echo "Remove old bridge container ..."
 sudo docker rm -f bridge_container
 echo
 echo "Remove old bridge image ..."
-sudo docker rmi bridge
+sudo docker rmi makstashkevich/moyscklad-yclients-bridge:latest
 echo
 echo "Build bridge image ..."
-sudo docker build -t bridge .
+sudo docker build -t makstashkevich/moyscklad-yclients-bridge:latest .
 echo
 echo "Read .env file"
 if [ -f .env ]
@@ -27,4 +27,4 @@ sudo docker run \
     --name=bridge_container \
     --restart=always \
     --mount type=bind,source="$(pwd)"/bridge.session,target=/bridge/bridge.session \
-    -p "${WEBSERVER_PORT:-80}:${WEBSERVER_PORT:-80}" bridge
+    -p "${WEBSERVER_PORT:-80}:${WEBSERVER_PORT:-80}" makstashkevich/moyscklad-yclients-bridge:latest
