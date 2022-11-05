@@ -84,15 +84,15 @@ async def sync_yclients_products_with_moyscklad(
                     _logger.debug("YClients Product not found actual_amounts param ... Continue ...")
                     continue
 
-                product_amount = get_amount_product(product)
-                if product_amount < 1:
-                    _logger.debug(
-                        f"YClients Product not found amount with storage_id:{yclients_storage_id} ... Continue ...")
-                    continue
-
                 product_title = product['title']
                 product_article = product['article']
                 product_cost = int(product['cost'])
+
+                product_amount = get_amount_product(product)
+                if product_amount < 1:
+                    _logger.debug(
+                        f"YClients Product:{product_article} not found amount with storage_id:{yclients_storage_id} ... Continue ...")
+                    continue
 
                 # Add found product to list
                 add_update_yclients_product(product_title, product_article, product_amount, product_cost)
