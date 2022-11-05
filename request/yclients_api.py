@@ -102,7 +102,7 @@ class YClientsApi(Api):
 
     @cache_result_request
     async def get_products(self, company_id: int, good_id: int = 0,
-                           *, count: int = 1000, page: int = 1, term: str = None) -> dict | list:
+                           *, count: int = 100, page: int = 1, term: str = None) -> dict | list:
         """
         https://developers.yclients.com/ru/#tag/Tovary/operation/Получить%20товары
         :return:
@@ -123,6 +123,26 @@ class YClientsApi(Api):
         response = req.response
         self.raise_failure_response(response)
         return response['data']
+
+    @cache_result_request
+    async def get_all_products(self, company_id: int, limit_page: int = 10) -> list:
+        """
+        :param company_id: Company id
+        :param limit_page: 10 pages -> 1000 products
+        :return:
+        """
+        products_list = []
+        page_number = 1
+        is_full = False
+        while not is_full:
+            current_products = await self.get_products(company_id=company_id, count=100, page=page_number)
+            if type(current_products) is list and len(current_products) > 0 and page_number >= limit_page:
+                products_list += current_products
+                page_number += 1
+            else:
+                is_full = True
+
+        return products_list
 
     @cache_result_request
     async def get_product_good_id_by_article(self, company_id: int, article: str) -> int:

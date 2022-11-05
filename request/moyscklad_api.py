@@ -5,7 +5,7 @@ from datetime import datetime
 from aiohttp import ClientResponse
 
 from request.api import Api, ApiException, cache_result_request
-from settings import get_global_settings, get_moysclad_settings, get_timezone
+from settings import get_moysclad_settings, get_timezone
 
 
 class MoyscladApiWebhookActionType(enum.Enum):
@@ -107,7 +107,7 @@ class MoysckladApi(Api):
 
     @cache_result_request
     async def get_first_organization(self) -> dict | None:
-        organization_all = await self.get_organization_all()
+        organization_all = await self.get_organization_all(limit=1)
         organization_rows = organization_all['rows']
 
         if type(organization_rows) is list and len(organization_rows) > 0:
@@ -130,7 +130,7 @@ class MoysckladApi(Api):
 
     @cache_result_request
     async def get_first_store(self) -> dict | None:
-        store_all = await self.get_store_all()
+        store_all = await self.get_store_all(limit=1)
         store_rows = store_all['rows']
 
         if type(store_rows) is list and len(store_rows) > 0:

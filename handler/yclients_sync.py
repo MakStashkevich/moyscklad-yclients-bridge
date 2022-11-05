@@ -71,10 +71,7 @@ async def sync_yclients_products_with_moyscklad(
         else:
             # Product not found -> Get all products of storage
             _logger.debug("Get all YClients products of storage ...")
-            products = await yclients_api.get_products(
-                company_id=yclients_company_id,
-                count=1000
-            )
+            products = await yclients_api.get_all_products(company_id=yclients_company_id)
 
             if type(products) is not list:
                 _logger.error("Found YClients products data is not type list and not parsed ...")
