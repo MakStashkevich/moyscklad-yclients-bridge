@@ -34,9 +34,7 @@ class MoysckladApi(Api):
     def header(self) -> dict:
         return {
             "Accept": "application/json;charset=utf-8",
-            "Accept-Language": get_global_settings().language,
             "Authorization": "Bearer {}".format(self.access_token),
-            "Content-Type": "application/json"
         }
 
     async def handle_error(self, response: ClientResponse):

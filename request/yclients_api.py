@@ -34,9 +34,7 @@ class YClientsApi(Api):
 
         return {
             "Accept": "application/vnd.yclients.v2+json",
-            "Accept-Language": get_global_settings().language,
-            "Authorization": auth,
-            "Content-Type": "application/json"
+            "Authorization": auth
         }
 
     @staticmethod

@@ -92,13 +92,73 @@ class ApiResponse:
         self.response = response
 
 
+def to_curl(request, compressed: bool = False, verify: bool = True):
+    """
+    Returns string with curl command by provided request object
+    Parameters
+    ----------
+    compressed : bool
+        If `True` then `--compressed` argument will be added to result
+        :param request:
+        :param compressed:
+        :param verify:
+    """
+    import sys
+    if sys.version_info.major >= 3:
+        from shlex import quote
+    else:
+        from pipes import quote
+
+    parts = [
+        ('curl', None),
+        ('-X', request.method),
+    ]
+
+    for k, v in sorted(request.headers.items()):
+        parts += [('-H', '{0}: {1}'.format(k, v))]
+
+    if request.body:
+        body = request.body
+        if isinstance(body, bytes):
+            body = body.decode('utf-8')
+        parts += [('-d', body)]
+
+    if compressed:
+        parts += [('--compressed', None)]
+
+    if not verify:
+        parts += [('--insecure', None)]
+
+    parts += [(None, request.url)]
+
+    flat_parts = []
+    for k, v in parts:
+        if k:
+            flat_parts.append(quote(k))
+        if v:
+            flat_parts.append(quote(v))
+
+    return ' '.join(flat_parts)
+
+
+def prepare_header(header: dict) -> dict:
+    if 'Accept-Language' not in header:
+        header['Accept-Language'] = _settings.language
+    if 'User-Agent' not in header:
+        header['User-Agent'] = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) " \
+                               "AppleWebKit/537.36 (KHTML, like Gecko) " \
+                               "Chrome/104.0.5112.79 Safari/537.36"
+    if 'Connection' not in header:
+        header['Connection'] = 'close'
+    if 'Cache-Control' not in header:
+        header['Cache-Control'] = 'no-cache'
+    return header
+
+
 class Api:
     @property
     def header(self) -> dict:
-        return {
-            "Accept": "application/json",
-            # "Cache-Control": "no-cache"
-        }
+        return {"Accept": "application/json;charset=utf-8"}
 
     @staticmethod
     async def synchronisation_requests_sleep(delay_ms: int = _settings.delay_requests) -> None:
@@ -130,13 +190,13 @@ class Api:
         async with ClientSession(
                 trace_configs=[_trace_config],
                 timeout=_client_timeout_sec,
-                headers=self.header if header is None else header
+                headers=prepare_header(self.header if header is None else header)
         ) as client:
-            response = await client.get(url, params=params, allow_redirects=False)
-            if response.status != 200:
-                await self.handle_error(response)
+            async with client.get(url, params=params, allow_redirects=False) as response:
+                if response.status != 200:
+                    await self.handle_error(response)
 
-        return ApiResponse(response.status, await response.json())
+                return ApiResponse(response.status, await response.json())
 
     @timeout_attempt_request
     async def post(self, url: str, params: dict | list = None, header: dict = None) -> ApiResponse:
@@ -144,10 +204,10 @@ class Api:
         async with ClientSession(
                 trace_configs=[_trace_config],
                 timeout=_client_timeout_sec,
-                headers=self.header if header is None else header
+                headers=prepare_header(self.header if header is None else header)
         ) as client:
-            response = await client.post(url, json=params, ssl=False)
-            if response.status != 200 and response.status != 201:
-                await self.handle_error(response)
+            async with client.post(url, json=params, ssl=False) as response:
+                if response.status != 200 and response.status != 201:
+                    await self.handle_error(response)
 
-        return ApiResponse(response.status, await response.json())
+                return ApiResponse(response.status, await response.json())
