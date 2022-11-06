@@ -59,7 +59,11 @@ def cache_result_request(fn, delay_ms: int = _settings.delay_cache):
     async def wrap(*args, **kwargs):
         func_name = str(fn.__name__).lower()
         kwd_mark = object()  # sentinel for separating args from kwargs
-        key = (func_name,) + args + (kwd_mark,) + tuple(sorted(kwargs.items()))
+        key = (func_name,) + args + (kwd_mark,) + tuple(sorted(
+            tuple(
+                tuple(y) for y in x if type(x) is list
+            ) for x in kwargs.items() if type(x) is list
+        ))
         func_hash = hash(key)
 
         current_ms = round(time() * 1000)
