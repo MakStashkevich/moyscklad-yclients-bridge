@@ -61,7 +61,7 @@ def cache_result_request(fn, delay_ms: int = _settings.delay_cache):
         kwd_mark = object()  # sentinel for separating args from kwargs
         key = (func_name,) + args + (kwd_mark,) + tuple(sorted(
             tuple(
-                tuple(y) for y in x if type(x) is list
+                tuple(y) for y in x if type(y) is list
             ) for x in kwargs.items() if type(x) is list
         ))
         func_hash = hash(key)
