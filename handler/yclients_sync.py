@@ -135,7 +135,7 @@ async def sync_yclients_products_with_moyscklad(
 
             row_name = row['name']
             row_sale_prices = row['salePrices']
-            row_cost = int(float(row_sale_prices[0]['value']) / 1000)
+            row_cost = int(float(row_sale_prices[0]['value']) / 100)
 
             new_row = {}
             yclients_product = update_yclients_products[row_article]
@@ -144,7 +144,7 @@ async def sync_yclients_products_with_moyscklad(
 
             if int(yclients_product['cost']) != row_cost:
                 new_sale_prices = row_sale_prices.copy()
-                new_sale_prices[0]['value'] = float(int(yclients_product['cost']) * 1000)
+                new_sale_prices[0]['value'] = float(int(yclients_product['cost']) * 100)
                 new_row["salePrices"] = new_sale_prices
 
             if len(new_row) > 0:
