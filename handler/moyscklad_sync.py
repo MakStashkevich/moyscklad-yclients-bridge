@@ -46,13 +46,13 @@ async def sync_moyscklad_order_with_yclients(
 
         # Order Agent Metadata
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-kontragent-poluchit-kontragenta
-        _logger.debug("Get MoyScklad order agent metadata ...")
-        req = await moyscklad_api.get(order_agent['meta']['href'])
-        agent = req.response
-        agent_name = agent['name']
-        agent_email = agent['email'] if 'email' in agent else None
-        agent_phone = agent['phone'] if 'phone' in agent else None
-        agent_company_type = agent['companyType']
+        # _logger.debug("Get MoyScklad order agent metadata ...")
+        # req = await moyscklad_api.get(order_agent['meta']['href'])
+        # agent = req.response
+        # agent_name = agent['name']
+        # agent_email = agent['email'] if 'email' in agent else None
+        # agent_phone = agent['phone'] if 'phone' in agent else None
+        # agent_company_type = agent['companyType']
 
         # Check is individual agent & create him
         yclients_client_id = 0

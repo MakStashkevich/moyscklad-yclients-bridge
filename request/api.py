@@ -57,13 +57,28 @@ _cache_timeout = {}
 @optional_arg_decorator
 def cache_result_request(fn, delay_ms: int = _settings.delay_cache):
     async def wrap(*args, **kwargs):
+        kwargs_items = []
+        for item in kwargs.items():
+            try:
+                kwarg_name = item[0]
+            except KeyError:
+                continue
+
+            try:
+                kwarg_value = item[1]
+            except KeyError:
+                kwarg_value = None
+
+            if type(kwarg_value) is dict:
+                kwarg_value = tuple(kwarg_value.items())
+            elif type(kwarg_value) is list:
+                kwarg_value = tuple(kwarg_value)
+
+            kwargs_items.append((kwarg_name, kwarg_value))
+
         func_name = str(fn.__name__).lower()
         kwd_mark = object()  # sentinel for separating args from kwargs
-        key = (func_name,) + args + (kwd_mark,) + tuple(sorted(
-            tuple(
-                tuple(y) for y in x if type(y) is list
-            ) for x in kwargs.items() if type(x) is list
-        ))
+        key = (func_name,) + args + (kwd_mark,) + tuple(sorted(kwargs_items))
         func_hash = hash(key)
 
         current_ms = round(time() * 1000)
