@@ -36,13 +36,13 @@ async def sync_moyscklad_order_with_yclients(
 
         # Order State Metadata
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-statusy-dokumentow-statusy
-        _logger.debug("Get MoyScklad state metadata ...")
-        req = await moyscklad_api.get(order_state['meta']['href'])
-        state = req.response
-        state_type = state['stateType'] if 'stateType' in state else None
-        if state_type != "Successful":
-            _logger.error("MoyScklad state type not successful ...")
-            return False
+        # _logger.debug("Get MoyScklad state metadata ...")
+        # req = await moyscklad_api.get(order_state['meta']['href'])
+        # state = req.response
+        # state_type = state['stateType'] if 'stateType' in state else None
+        # if state_type != "Successful":
+        #     _logger.error("MoyScklad state type not successful ...")
+        #     return False
 
         # Order Agent Metadata
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-kontragent-poluchit-kontragenta
@@ -56,37 +56,37 @@ async def sync_moyscklad_order_with_yclients(
 
         # Check is individual agent & create him
         yclients_client_id = 0
-        if agent_company_type == "individual" and agent_phone is not None and len(agent_phone) > 0:
-            # Search Agent on YClients by email
-            _logger.debug(f"Search YClients agent by email {agent_email} ...")
-            yclients_found_clients = await yclients_api.get_client_search_by_value(
-                company_id=yclients.company_id,
-                value=agent_email
-            )
-
-            # Search Agent on YClients by phone number
-            if len(yclients_found_clients) < 1:
-                _logger.debug(f"Search YClients agent by phone number {agent_phone} ...")
-                yclients_found_clients = await yclients_api.get_client_search_by_value(
-                    company_id=yclients.company_id,
-                    value=agent_phone
-                )
-
-            if len(yclients_found_clients) > 0:
-                yclients_client_id = yclients_found_clients[0]['id']
-                _logger.debug(f"Found YClients agent with id:{yclients_client_id} ...")
-            else:
-                # Create Agent on YClients
-                _logger.debug("Create new YClients agent ...")
-                yclients_client = await yclients_api.set_client(
-                    company_id=yclients.company_id,
-                    name=agent_name,
-                    phone=agent_phone,
-                    email=agent_email,
-                    comment=f"MoyScklad Synchronisation Agent"
-                )
-                yclients_client_id = int(yclients_client['id'])
-                _logger.debug(f"Created new YClients agent with id:{yclients_client_id} ...")
+        # if agent_company_type == "individual" and agent_phone is not None and len(agent_phone) > 0:
+        #     # Search Agent on YClients by email
+        #     _logger.debug(f"Search YClients agent by email {agent_email} ...")
+        #     yclients_found_clients = await yclients_api.get_client_search_by_value(
+        #         company_id=yclients.company_id,
+        #         value=agent_email
+        #     )
+        #
+        #     # Search Agent on YClients by phone number
+        #     if len(yclients_found_clients) < 1:
+        #         _logger.debug(f"Search YClients agent by phone number {agent_phone} ...")
+        #         yclients_found_clients = await yclients_api.get_client_search_by_value(
+        #             company_id=yclients.company_id,
+        #             value=agent_phone
+        #         )
+        #
+        #     if len(yclients_found_clients) > 0:
+        #         yclients_client_id = yclients_found_clients[0]['id']
+        #         _logger.debug(f"Found YClients agent with id:{yclients_client_id} ...")
+        #     else:
+        #         # Create Agent on YClients
+        #         _logger.debug("Create new YClients agent ...")
+        #         yclients_client = await yclients_api.set_client(
+        #             company_id=yclients.company_id,
+        #             name=agent_name,
+        #             phone=agent_phone,
+        #             email=agent_email,
+        #             comment=f"MoyScklad Synchronisation Agent"
+        #         )
+        #         yclients_client_id = int(yclients_client['id'])
+        #         _logger.debug(f"Created new YClients agent with id:{yclients_client_id} ...")
 
         # Create new YClients finance transaction
         # _logger.debug("Create new YClients finance transaction ...")
