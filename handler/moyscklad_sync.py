@@ -36,13 +36,13 @@ async def sync_moyscklad_order_with_yclients(
 
         # Order State Metadata
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-statusy-dokumentow-statusy
-        # _logger.debug("Get MoyScklad state metadata ...")
-        # req = await moyscklad_api.get(order_state['meta']['href'])
-        # state = req.response
-        # state_type = state['stateType'] if 'stateType' in state else None
-        # if state_type != "Successful":
-        #     _logger.error("MoyScklad state type not successful ...")
-        #     return False
+        _logger.debug("Get MoyScklad state metadata ...")
+        req = await moyscklad_api.get(order_state['meta']['href'])
+        state = req.response
+        state_type = state['stateType'] if 'stateType' in state else None
+        if state_type != "Successful":
+            _logger.error("MoyScklad state type not successful ...")
+            return False
 
         # Order Agent Metadata
         # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-kontragent-poluchit-kontragenta
