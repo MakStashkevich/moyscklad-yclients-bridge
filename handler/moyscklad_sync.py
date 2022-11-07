@@ -16,6 +16,7 @@ async def sync_moyscklad_order_with_yclients(
         moyscklad_api: MoysckladApi,
         order_name: str,
         order_sum: int,
+        order_state: dict,
         order_agent: dict,
         order_positions: dict
 ) -> bool:
@@ -30,7 +31,17 @@ async def sync_moyscklad_order_with_yclients(
 
         # Check have positions rows
         if positions_rows is None or len(positions_rows) < 1:
-            _logger.error("MoyScklad order positions not found")
+            _logger.error("MoyScklad order positions not found ...")
+            return False
+
+        # Order State Metadata
+        # https://dev.moysklad.ru/doc/api/remap/1.2/dictionaries/#suschnosti-statusy-dokumentow-statusy
+        _logger.debug("Get MoyScklad state metadata ...")
+        req = await moyscklad_api.get(order_state['meta']['href'])
+        state = req.response
+        state_type = state['stateType'] if 'stateType' in state else None
+        if state_type != "Successful":
+            _logger.error("MoyScklad state type not successful ...")
             return False
 
         # Order Agent Metadata

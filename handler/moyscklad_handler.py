@@ -104,6 +104,7 @@ class MoysckladHandler:
                 order_name = customer_order['name']
                 # order_description = customer_order['description'] if 'description' in customer_order else ''
                 order_sum = int(float(customer_order['sum']) / 100)
+                order_state = customer_order['state']
                 order_agent = customer_order['agent']
                 order_positions = customer_order['positions']
 
@@ -112,6 +113,7 @@ class MoysckladHandler:
                     moyscklad_api=self.api,
                     order_name=order_name,
                     order_sum=order_sum,
+                    order_state=order_state,
                     order_agent=order_agent,
                     order_positions=order_positions
                 ))
