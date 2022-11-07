@@ -120,7 +120,11 @@ async def sync_moyscklad_order_with_yclients(
             product = req.response
             # product_name = product['name']
             # product_code = product['code'] if 'code' in product else ''
-            product_article = product['article'] if 'article' in product else ''
+            product_article = product['article'] if 'article' in product else None
+
+            if product_article is None or len(product_article) < 1:
+                _logger.debug("YClients product article not found ...")
+                continue
 
             if 'salePrices' in product:
                 product_sale_prices = product['salePrices']
