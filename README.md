@@ -1,6 +1,6 @@
-# Мост между сервисами Moyscklad и YClients
+# Мост между сервисами YClients и МойСклад
 
-Задача бизнеса: синхронизировать товары из Moysclad с YClients
+Задача бизнеса: синхронизировать товары из YClients в МойСклад
 
 Решение: небольшой скрипт для автоматической синхронизации товаров на Python используя API обоих сервисов
 
@@ -38,7 +38,7 @@
 
 Пишите мне любым из возможных способов, везде отвечу.
 
-Почта: makstashkevich@gmail.com
+Почта: [makstashkevich@gmail.com](mailto:makstashkevich@gmail.com)
 
 VK: [@makstashkevich](https://vk.me/makstashkevich)
 
