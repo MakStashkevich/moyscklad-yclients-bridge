@@ -30,7 +30,7 @@
 
 <b>Вот и все.</b> Хорошая работа!
 
-P.S. По адресу указанному в настройках WEBSERVER_HOST можно открыть страницу для ручной синхронизации данных
+<b>P.S.</b> По адресу указанному в настройках WEBSERVER_HOST можно открыть страницу для ручной синхронизации данных
 
 ---
 
@@ -40,8 +40,8 @@ P.S. По адресу указанному в настройках WEBSERVER_HO
 
 Почта: makstashkevich@gmail.com
 
-VK: vk.me/makstashkevich
+VK: [@makstashkevich](https://vk.me/makstashkevich)
 
-![small-filled-telegram](https://raw.githubusercontent.com/CLorant/readme-social-icons/main/small/filled/telegram.svg) Telegram: t.me/stashkevich
+![small-filled-telegram](https://raw.githubusercontent.com/CLorant/readme-social-icons/main/small/filled/telegram.svg) Telegram: [@stashkevich](https://t.me/stashkevich)
 
-![small-filled-instagram](https://raw.githubusercontent.com/CLorant/readme-social-icons/main/small/filled/instagram.svg) Instagram: instagram.com/makstashkevich
+![small-filled-instagram](https://raw.githubusercontent.com/CLorant/readme-social-icons/main/small/filled/instagram.svg) Instagram: [@makstashkevich](https://instagram.com/makstashkevich)
